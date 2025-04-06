@@ -2,12 +2,9 @@ package com.app.payroll_service.models;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -27,8 +24,8 @@ public class Schedule {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
     
-    @OneToMany(mappedBy = "schedule")
-    @JsonManagedReference // Gestiona la relación y evita bucles
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Contract> contracts;
     
     @CreationTimestamp

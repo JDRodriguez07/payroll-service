@@ -1,14 +1,9 @@
 package com.app.payroll_service.models;
-
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDateTime;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -24,7 +19,6 @@ public class Contract {
 
     @ManyToOne
     @JoinColumn(name = "schedule_id", nullable = false)
-    @JsonBackReference
     private Schedule schedule;
 
     @ManyToOne
