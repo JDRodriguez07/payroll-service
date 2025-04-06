@@ -8,6 +8,8 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -39,8 +41,8 @@ public class Payroll {
     @Column(name = "status", nullable = false)
     private String status;
 
-    // Relationship with payroll_deductions
     @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<PayrollDeductions> payrollDeductions;
 
     @CreationTimestamp

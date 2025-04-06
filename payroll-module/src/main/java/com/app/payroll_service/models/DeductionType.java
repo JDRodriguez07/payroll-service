@@ -9,6 +9,8 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -25,10 +27,14 @@ public class DeductionType {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @OneToMany(mappedBy = "deductionType", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Deduction> deductions;
+
     // Percentage represented as a decimal. For example: 15% = 0.1500
     @Column(name = "percentage", precision = 5, scale = 4, nullable = false)
     private BigDecimal percentage;
-    
+
     @CreationTimestamp
     @Column(name = "created_at", columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt;
