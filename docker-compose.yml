@@ -1,0 +1,49 @@
+
+services:
+  payroll_db:
+    build: 
+      context: ./MySQL
+      dockerfile: Dockerfile
+    container_name: mysql_payroll_service
+    restart: always
+    ports:
+      - 3308:3306
+    volumes:
+      - ./Config/mysql:/var/lib/mysql
+    hostname: apps_database
+    networks:
+      - payroll_app
+    healthcheck:
+        test: ["CMD","mysql", "-u", "root", "-pPayRollService123*"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+# --------------------------------------------------------------------
+  # - The adminer is a tool for managing content in databases.
+  adminer:
+    image: adminer
+    container_name: adminer_wms
+    restart: always
+    ports:
+      - 9010:8080
+    networks:
+      - payroll_app
+# --------------------------------------------------------------------
+  payroll_service:
+    build:
+      context: ./payroll-module
+      dockerfile: Dockerfile
+    container_name: backend_payroll_service
+    restart: always
+    ports:
+      - 9020:8080
+    depends_on:
+       payroll_db:
+         condition: service_healthy
+    networks:
+      - payroll_app
+
+networks:
+  payroll_app:
+      driver: bridge
+      name: payroll_app
