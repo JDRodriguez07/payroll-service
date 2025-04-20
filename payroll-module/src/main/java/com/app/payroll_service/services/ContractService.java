@@ -1,5 +1,6 @@
 package com.app.payroll_service.services;
 
+import java.util.Date;
 import java.util.List;
 
 import com.app.payroll_service.exceptions.ContractNotFoundException;
@@ -45,9 +46,27 @@ public class ContractService {
         existingContract.setContractType(contract.getContractType());
         existingContract.setHireDate(contract.getHireDate());
         existingContract.setTerminationDate(contract.getTerminationDate());
-        existingContract.setDailyHours(contract.getDailyHours());
+        // existingContract.setDailyHours(contract.getDailyHours());
         existingContract.setSalary(contract.getSalary());
 
         return contractRepository.save(existingContract);
     }
+
+    public Contract terminateContract(Long contractId) {
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ContractNotFoundException(contractId));
+    
+        // Marcar como terminado
+        contract.setStatus("Terminado");
+        contract.setTerminationDate(new Date());
+    
+        Contract updated = contractRepository.save(contract);
+    
+        // 🔔 Punto de integración (comunicación futura)
+        // logContractTerminationEvent(updated);
+    
+        return updated;
+    }
+    
+
 }
