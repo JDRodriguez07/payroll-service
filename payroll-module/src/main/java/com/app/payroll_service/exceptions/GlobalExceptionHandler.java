@@ -75,13 +75,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidVacationDaysException.class)
     public ResponseEntity<String> handleInvalidVacationDays(InvalidVacationDaysException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(DuplicateDeductionTypeNameException.class)
     public ResponseEntity<String> handleDuplicateDeductionType(DuplicateDeductionTypeNameException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidDeductionAmountException.class)
+    public ResponseEntity<String> handleInvalidDeductionAmount(InvalidDeductionAmountException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MissingDeductionTypeException.class)
+    public ResponseEntity<String> handleMissingDeductionType(MissingDeductionTypeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
