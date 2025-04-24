@@ -24,9 +24,21 @@ public class ContractTypeService {
                 .orElseThrow(() -> new ContractTypeNotFoundException(id));
     }
 
-    public ContractType createContractType(ContractType contractType) {
-        return contractTypeRepository.save(contractType);
+    /*
+     * 
+    public ContractType createContractType(ContractType newType) {
+        // Validación básica de campos obligatorios
+        if (newType.getName() == null || newType.getName().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del tipo de contrato es obligatorio");
+        }
+        // (Opcional) Verificar duplicados por nombre
+        if (contractTypeRepository.existsByName(newType.getName())) {
+            throw new RuntimeException("Ya existe un tipo de contrato con ese nombre");
+        }
+        // Guardar la entidad
+        return contractTypeRepository.save(newType);
     }
+    */
 
     public void deleteContractType(Long id) {
         if (!contractTypeRepository.existsById(id)) {

@@ -1,17 +1,26 @@
 package com.app.payroll_service.services;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import com.app.payroll_service.dto.CreateContractDTO;
+import com.app.payroll_service.dto.ContractResponseDTO;
+import com.app.payroll_service.dto.UpdateContractDTO;
+import com.app.payroll_service.enums.ContractStatusEnum;
 import com.app.payroll_service.exceptions.ContractNotFoundException;
+import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
 import com.app.payroll_service.exceptions.ScheduleNotFoundException;
+import com.app.payroll_service.mapper.ContractMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.app.payroll_service.models.Contract;
+import com.app.payroll_service.models.ContractType;
 import com.app.payroll_service.models.Schedule;
 import com.app.payroll_service.repository.ContractRepository;
+import com.app.payroll_service.repository.ContractTypeRepository;
 import com.app.payroll_service.repository.ScheduleRepository;
 
 @Service
@@ -23,6 +32,11 @@ public class ContractService {
     @Autowired
     private ScheduleRepository scheduleRepository;
 
+    @Autowired
+    private ContractTypeRepository contractTypeRepository;
+
+    private ContractMapper contractMapper;
+
     public List<Contract> getAllContracts() {
         return contractRepository.findAll();
     }
@@ -32,57 +46,103 @@ public class ContractService {
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
     }
 
-    public Contract createContract(Contract contract) {
-        return contractRepository.save(contract);
-    }
+    public ContractResponseDTO createContract(CreateContractDTO dto) {
+        // Validar relaciones
+        Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
+                .orElseThrow(() -> new ScheduleNotFoundException(dto.getScheduleId()));
 
-    public void deleteContract(Long contractId) {
-        if (!contractRepository.existsById(contractId)) {
-            throw new ContractNotFoundException(contractId);
+        ContractType contractType = contractTypeRepository.findById(dto.getContractTypeId())
+                .orElseThrow(() -> new ContractTypeNotFoundException(dto.getContractTypeId()));
+
+        // Validar fechas
+        if (dto.getTerminationDate() != null && dto.getTerminationDate().isBefore(dto.getHireDate())) {
+            throw new IllegalArgumentException("Termination date cannot be before hire date.");
         }
-        contractRepository.deleteById(contractId);
+
+        // MapStruct mapea los campos simples
+        Contract contract = contractMapper.toEntityContract(dto);
+
+        // Asignar relaciones y campos adicionales
+        contract.setSchedule(schedule);
+        contract.setContractType(contractType);
+        contract.setStatus(ContractStatusEnum.ACTIVE.getValue());
+
+        // Calcular horas diarias a partir del horario
+        int dailyHours = (int) ChronoUnit.HOURS.between(schedule.getStartTime(), schedule.getEndTime());
+        contract.setDailyHours(dailyHours);
+
+        // Guardar y retornar
+        Contract saved = contractRepository.save(contract);
+        return mapToResponseDTO(saved);
     }
 
-    public Contract updateContract(Long contractId, Contract contract) {
+    public ContractResponseDTO updateContract(Long contractId, UpdateContractDTO dto) {
         Contract existingContract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
 
-        existingContract.setSchedule(contract.getSchedule());
-        existingContract.setContractType(contract.getContractType());
-        existingContract.setHireDate(contract.getHireDate());
-        existingContract.setTerminationDate(contract.getTerminationDate());
-        // existingContract.setDailyHours(contract.getDailyHours());
-        existingContract.setSalary(contract.getSalary());
+        // Solo actualizar si se incluye un nuevo horario
+        if (dto.getScheduleId() != null) {
+            Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
+                    .orElseThrow(() -> new ScheduleNotFoundException(dto.getScheduleId()));
+            existingContract.setSchedule(schedule);
 
-        return contractRepository.save(existingContract);
+            // Recalcular horas diarias si cambia el horario
+            int dailyHours = (int) ChronoUnit.HOURS.between(
+                    schedule.getStartTime(), schedule.getEndTime());
+            existingContract.setDailyHours(dailyHours);
+        }
+
+        // Solo actualizar si se incluye una nueva fecha de contratación
+        if (dto.getHireDate() != null) {
+            existingContract.setHireDate(dto.getHireDate());
+        }
+
+        // Validar y asignar terminationDate
+        if (dto.getTerminationDate() != null) {
+            if (existingContract.getHireDate() != null
+                    && dto.getTerminationDate().isBefore(existingContract.getHireDate())) {
+                throw new IllegalArgumentException("Termination date cannot be before hire date.");
+            }
+            existingContract.setTerminationDate(dto.getTerminationDate());
+        }
+
+        // Solo actualizar si se incluye un nuevo salario
+        if (dto.getSalary() != null) {
+            existingContract.setSalary(dto.getSalary());
+        }
+
+        Contract updated = contractRepository.save(existingContract);
+        return mapToResponseDTO(updated);
     }
 
     public Contract terminateContract(Long contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
 
-        // Marcar como terminado
-        contract.setStatus("Terminado");
-        contract.setTerminationDate(new Date());
+        contract.setStatus(ContractStatusEnum.TERMINATED.getValue());
+        contract.setTerminationDate(LocalDate.now());
 
         Contract updated = contractRepository.save(contract);
 
-        // 🔔 Punto de integración (comunicación futura)
+        // Punto de integración (comunicación futura)
         // logContractTerminationEvent(updated);
 
         return updated;
     }
 
-    public Contract assignScheduleToContract(Long contractId, Long scheduleId) {
-        Contract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new ContractNotFoundException(contractId));
+    private ContractResponseDTO mapToResponseDTO(Contract contract) {
+        ContractResponseDTO dto = new ContractResponseDTO();
 
-        Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
+        dto.setContractId(contract.getContractId());
+        dto.setContractTypeName(contract.getContractType().getName());
+        dto.setStartTime(contract.getSchedule().getStartTime());
+        dto.setEndTime(contract.getSchedule().getEndTime());
+        dto.setStatus(contract.getStatus());
+        dto.setHireDate(contract.getHireDate());
+        dto.setTerminationDate(contract.getTerminationDate());
+        dto.setSalary(contract.getSalary());
 
-        contract.setSchedule(schedule);
-
-        return contractRepository.save(contract);
+        return dto;
     }
 
 }
