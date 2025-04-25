@@ -13,6 +13,7 @@ public class ContractResponseDTO {
     private String contractTypeName;
     private LocalTime startTime;
     private LocalTime endTime;
+    private int dailyHours;
     private String status;
     private LocalDate hireDate;
     private LocalDate terminationDate;
