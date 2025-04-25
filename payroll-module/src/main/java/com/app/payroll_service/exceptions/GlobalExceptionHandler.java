@@ -2,105 +2,122 @@ package com.app.payroll_service.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ContractNotFoundException.class)
-    public ResponseEntity<String> handleContractNotFound(ContractNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleContractNotFound(ContractNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(ContractTypeNotFoundException.class)
-    public ResponseEntity<String> handleContractTypeNotFound(ContractTypeNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleContractTypeNotFound(ContractTypeNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(PayrollNotFoundException.class)
-    public ResponseEntity<String> handlePayrollNotFound(PayrollNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handlePayrollNotFound(PayrollNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(ScheduleNotFoundException.class)
-    public ResponseEntity<String> handleScheduleNotFound(ScheduleNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleScheduleNotFound(ScheduleNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(LicenseNotFoundException.class)
-    public ResponseEntity<String> handleLicenseNotFound(LicenseNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleLicenseNotFound(LicenseNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(DeductionNotFoundException.class)
-    public ResponseEntity<String> handleDeductionNotFound(DeductionNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleDeductionNotFound(DeductionNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(DeductionTypeNotFoundException.class)
-    public ResponseEntity<String> handleDeductionTypeNotFound(DeductionTypeNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleDeductionTypeNotFound(DeductionTypeNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(LicenseTypeNotFoundException.class)
-    public ResponseEntity<String> handleLicenseTypeNotFound(LicenseTypeNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleLicenseTypeNotFound(LicenseTypeNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(PayrollDeductionsNotFoundException.class)
-    public ResponseEntity<String> handlePayrollDeductionsNotFound(PayrollDeductionsNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handlePayrollDeductionsNotFound(PayrollDeductionsNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(VacationNotFoundException.class)
-    public ResponseEntity<String> handleVacationNotFound(VacationNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleVacationNotFound(VacationNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidLicenseDatesException.class)
-    public ResponseEntity<String> handleInvalidLicenseDates(InvalidLicenseDatesException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleInvalidLicenseDates(InvalidLicenseDatesException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidLicenseDaysException.class)
-    public ResponseEntity<String> handleInvalidLicenseDays(InvalidLicenseDaysException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleInvalidLicenseDays(InvalidLicenseDaysException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidVacationDatesException.class)
-    public ResponseEntity<String> handleInvalidVacationDates(InvalidVacationDatesException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleInvalidVacationDates(InvalidVacationDatesException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidVacationDaysException.class)
-    public ResponseEntity<String> handleInvalidVacationDays(InvalidVacationDaysException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleInvalidVacationDays(InvalidVacationDaysException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(DuplicateDeductionTypeNameException.class)
-    public ResponseEntity<String> handleDuplicateDeductionType(DuplicateDeductionTypeNameException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleDuplicateDeductionType(DuplicateDeductionTypeNameException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidDeductionAmountException.class)
-    public ResponseEntity<String> handleInvalidDeductionAmount(InvalidDeductionAmountException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleInvalidDeductionAmount(InvalidDeductionAmountException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MissingDeductionTypeException.class)
-    public ResponseEntity<String> handleMissingDeductionType(MissingDeductionTypeException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleMissingDeductionType(MissingDeductionTypeException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidContractSalaryException.class)
-    public ResponseEntity<String> handleInvalidSalary(InvalidContractSalaryException ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleInvalidSalary(InvalidContractSalaryException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MissingHireDateException.class)
-    public ResponseEntity<String> handleMissingHireDate(MissingHireDateException ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleMissingHireDate(MissingHireDateException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(MissingTerminationDateException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingTerminationDate(MissingTerminationDateException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    // ✅ Método utilitario común para construir respuestas consistentes
+    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("error", status.getReasonPhrase());
+        body.put("message", message);
+        return new ResponseEntity<>(body, status);
+    }
 }
