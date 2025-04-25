@@ -117,6 +117,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(TerminationDateNotAllowedException.class)
+    public ResponseEntity<Map<String, Object>> handleTerminationDateNotAllowed(TerminationDateNotAllowedException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, Object> body = new HashMap<>();
