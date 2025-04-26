@@ -8,6 +8,8 @@ import com.app.payroll_service.dto.CreateContractDTO;
 import com.app.payroll_service.dto.ContractResponseDTO;
 import com.app.payroll_service.dto.UpdateContractDTO;
 import com.app.payroll_service.enums.ContractStatusEnum;
+import com.app.payroll_service.exceptions.ContractAlreadyFinalizedException;
+import com.app.payroll_service.exceptions.ContractAlreadyTerminatedException;
 import com.app.payroll_service.exceptions.ContractNotFoundException;
 import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
 import com.app.payroll_service.exceptions.InvalidTerminationDateException;
@@ -141,16 +143,23 @@ public class ContractService {
         return contractMapper.toResponseDTO(updated);
     }
 
-    //Pending
-    public ContractResponseDTO terminateContract(Long contractId) {
+    public ContractResponseDTO terminateContractManually(Long contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
+
+        if (!ContractStatusEnum.ACTIVE.getValue().equals(contract.getStatus())) {
+            throw new ContractAlreadyTerminatedException(contractId);
+        }
+
+        if (contract.getTerminationDate() != null && contract.getTerminationDate().isBefore(LocalDate.now())) {
+            throw new ContractAlreadyFinalizedException(contractId);
+        }
 
         contract.setStatus(ContractStatusEnum.TERMINATED.getValue());
         contract.setTerminationDate(LocalDate.now());
 
-        Contract updated = contractRepository.save(contract);
-        return contractMapper.toResponseDTO(updated);
+        Contract terminated = contractRepository.save(contract);
+        return contractMapper.toResponseDTO(terminated);
     }
 
     /**
