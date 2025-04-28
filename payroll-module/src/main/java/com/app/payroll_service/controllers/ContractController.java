@@ -48,7 +48,7 @@ public class ContractController {
 
     // PUT /contracts/{id}/terminate
     @PutMapping("/{id}/terminate")
-    public ResponseEntity<ContractResponseDTO> terminateContract(@PathVariable Long id) {
+    public ResponseEntity<ContractResponseDTO> terminateContractManually(@PathVariable Long id) {
         ContractResponseDTO terminated = contractService.terminateContractManually(id);
         return ResponseEntity.ok(terminated);
     }
