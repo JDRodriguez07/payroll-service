@@ -8,8 +8,5 @@ public class InvalidVacationDatesException extends RuntimeException {
     public InvalidVacationDatesException() {
         super("Start date cannot be after end date.");
     }
-
-    public InvalidVacationDatesException(String message) {
-        super(message);
-    }
+    
 }

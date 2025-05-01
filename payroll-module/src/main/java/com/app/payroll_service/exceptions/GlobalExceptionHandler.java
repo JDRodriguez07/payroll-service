@@ -137,8 +137,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(LicenseCanceledOrTerminatedException.class)
-    public ResponseEntity<Map<String, Object>> handleLicenseAlreadyCanceledOrTerminated(LicenseCanceledOrTerminatedException ex) {
+    @ExceptionHandler(LicenseCanceledTerminatedRejectedException.class)
+    public ResponseEntity<Map<String, Object>> handleLicenseAlreadyCanceledOrTerminated(LicenseCanceledTerminatedRejectedException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(VacationStatusNotPendingApprovedException.class)
+    public ResponseEntity<Map<String, Object>> handleVacationAlreadyProcessed(VacationStatusNotPendingApprovedException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 

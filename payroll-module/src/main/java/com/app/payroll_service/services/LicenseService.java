@@ -12,7 +12,7 @@ import com.app.payroll_service.dto.LicenseResponseDTO;
 import com.app.payroll_service.dto.RequestLicenseDTO;
 import com.app.payroll_service.enums.LicenseStatusEnum;
 import com.app.payroll_service.exceptions.InvalidLicenseDatesException;
-import com.app.payroll_service.exceptions.LicenseCanceledOrTerminatedException;
+import com.app.payroll_service.exceptions.LicenseCanceledTerminatedRejectedException;
 import com.app.payroll_service.exceptions.LicenseStatusNotPendingException;
 import com.app.payroll_service.exceptions.LicenseNotFoundException;
 import com.app.payroll_service.exceptions.LicenseTypeNotFoundException;
@@ -35,28 +35,30 @@ public class LicenseService {
     private LicenseMapper licenseMapper;
 
     public LicenseResponseDTO requestLicense(RequestLicenseDTO dto) {
-        // Buscar el tipo de licencia
+        // Look up license type
         LicenseType licenseType = licenseTypeRepository.findById(dto.getLicenseTypeId())
                 .orElseThrow(() -> new LicenseTypeNotFoundException(dto.getLicenseTypeId()));
 
-        // Validar fechas
+        // Validate date consistency
         if (dto.getEndDate().isBefore(dto.getStartDate())) {
             throw new InvalidLicenseDatesException();
         }
 
-        // Calcular días hábiles (sin contar sábados ni domingos)
+        // Calculate working days excluding weekends
         int days = calculateWorkingDays(dto.getStartDate(), dto.getEndDate());
 
-        // Mapear DTO a entidad
+        // Map DTO to entity
         License license = licenseMapper.toEntity(dto);
+
+        // Note: User ID is assumed to be valid.
+        // Validation should be performed by the User microservice if needed.
+        license.setUserId(dto.getUserId());
+
         license.setLicenseType(licenseType);
         license.setDays(days);
         license.setStatus(LicenseStatusEnum.PENDING.getValue());
 
-        // Guardar
         License savedLicense = licenseRepository.save(license);
-
-        // Retornar respuesta
         return licenseMapper.toResponseDTO(savedLicense);
     }
 
@@ -92,15 +94,15 @@ public class LicenseService {
         License license = licenseRepository.findById(licenseId)
                 .orElseThrow(() -> new LicenseNotFoundException(licenseId));
 
-        if (LicenseStatusEnum.CANCELED.getValue().equals(license.getStatus())
-                || LicenseStatusEnum.TERMINATED.getValue().equals(license.getStatus())) {
-            throw new LicenseCanceledOrTerminatedException(licenseId);
+        if (!(LicenseStatusEnum.APPROVED.getValue().equals(license.getStatus())
+                || LicenseStatusEnum.PENDING.getValue().equals(license.getStatus()))) {
+            throw new LicenseCanceledTerminatedRejectedException(licenseId);
         }
 
         license.setStatus(LicenseStatusEnum.CANCELED.getValue());
 
-        License cancelledLicense = licenseRepository.save(license);
-        return licenseMapper.toResponseDTO(cancelledLicense);
+        License canceledLicense = licenseRepository.save(license);
+        return licenseMapper.toResponseDTO(canceledLicense);
     }
 
     @Scheduled(cron = "59 23 * * *")
@@ -129,6 +131,18 @@ public class LicenseService {
             date = date.plusDays(1);
         }
         return workDays;
+    }
+
+    public List<LicenseResponseDTO> getAllLicenses() {
+        List<License> licenses = licenseRepository.findAll();
+        return licenseMapper.toResponseDTOList(licenses);
+    }
+
+    public LicenseResponseDTO getLicenseById(Long licenseId) {
+        License license = licenseRepository.findById(licenseId)
+                .orElseThrow(() -> new LicenseNotFoundException(licenseId));
+
+        return licenseMapper.toResponseDTO(license);
     }
 
 }
