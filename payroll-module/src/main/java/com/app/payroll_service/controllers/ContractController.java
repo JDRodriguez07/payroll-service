@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for managing contracts.
+ * Provides endpoints to create, update, retrieve, and terminate contracts.
+ */
 @RestController
 @RequestMapping("/contracts")
 public class ContractController {
@@ -19,37 +23,64 @@ public class ContractController {
     @Autowired
     private ContractService contractService;
 
-    // GET /contracts
+    /**
+     * Retrieves all contracts.
+     *
+     * @return list of ContractResponseDTOs
+     */
     @GetMapping
     public ResponseEntity<List<ContractResponseDTO>> getAllContracts() {
         return ResponseEntity.ok(contractService.getAllContracts());
     }
 
-    // GET /contracts/{id}
+    /**
+     * Retrieves a specific contract by its ID.
+     *
+     * @param id the ID of the contract
+     * @return the corresponding ContractResponseDTO
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ContractResponseDTO> getContractById(@PathVariable Long id) {
         return ResponseEntity.ok(contractService.getContractById(id));
     }
 
-    // POST /contracts
+    /**
+     * Creates a new contract.
+     *
+     * @param dto the contract creation data
+     * @return the created ContractResponseDTO
+     */
     @PostMapping
     public ResponseEntity<ContractResponseDTO> createContract(@Valid @RequestBody CreateContractDTO dto) {
         ContractResponseDTO created = contractService.createContract(dto);
         return ResponseEntity.ok(created);
     }
 
-    // PUT /contracts/{id}
+    /**
+     * Updates an existing contract.
+     *
+     * @param id  the ID of the contract to update
+     * @param dto the update data
+     * @return the updated ContractResponseDTO
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<ContractResponseDTO> updateContract(@PathVariable Long id,
+    public ResponseEntity<ContractResponseDTO> updateContract(
+            @PathVariable Long id,
             @Valid @RequestBody UpdateContractDTO dto) {
         ContractResponseDTO updated = contractService.updateContract(id, dto);
         return ResponseEntity.ok(updated);
     }
 
-    // PUT /contracts/{id}/terminate
+    /**
+     * Manually terminates an active contract.
+     *
+     * @param id the ID of the contract to terminate
+     * @return the terminated ContractResponseDTO
+     */
     @PutMapping("/{id}/terminate")
     public ResponseEntity<ContractResponseDTO> terminateContractManually(@PathVariable Long id) {
         ContractResponseDTO terminated = contractService.terminateContractManually(id);
         return ResponseEntity.ok(terminated);
     }
+    
 }

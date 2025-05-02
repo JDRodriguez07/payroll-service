@@ -8,14 +8,7 @@ import com.app.payroll_service.dto.CreateContractDTO;
 import com.app.payroll_service.dto.ContractResponseDTO;
 import com.app.payroll_service.dto.UpdateContractDTO;
 import com.app.payroll_service.enums.ContractStatusEnum;
-import com.app.payroll_service.exceptions.ContractAlreadyFinalizedException;
-import com.app.payroll_service.exceptions.ContractAlreadyTerminatedException;
-import com.app.payroll_service.exceptions.ContractNotFoundException;
-import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
-import com.app.payroll_service.exceptions.InvalidTerminationDateException;
-import com.app.payroll_service.exceptions.MissingTerminationDateException;
-import com.app.payroll_service.exceptions.ScheduleNotFoundException;
-import com.app.payroll_service.exceptions.TerminationDateNotAllowedException;
+import com.app.payroll_service.exceptions.*;
 import com.app.payroll_service.mapper.ContractMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +22,10 @@ import com.app.payroll_service.repository.ContractRepository;
 import com.app.payroll_service.repository.ContractTypeRepository;
 import com.app.payroll_service.repository.ScheduleRepository;
 
+/**
+ * Service class responsible for managing contract operations such as creation,
+ * updating, termination, and scheduled validations.
+ */
 @Service
 public class ContractService {
 
@@ -44,6 +41,11 @@ public class ContractService {
     @Autowired
     private ContractMapper contractMapper;
 
+    /**
+     * Retrieves all contracts from the database.
+     *
+     * @return list of ContractResponseDTOs
+     */
     public List<ContractResponseDTO> getAllContracts() {
         List<Contract> contracts = contractRepository.findAll();
         return contracts.stream()
@@ -51,12 +53,24 @@ public class ContractService {
                 .toList();
     }
 
+    /**
+     * Retrieves a specific contract by its ID.
+     *
+     * @param contractId the ID of the contract
+     * @return ContractResponseDTO
+     */
     public ContractResponseDTO getContractById(Long contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
         return contractMapper.toResponseDTO(contract);
     }
 
+    /**
+     * Creates a new contract based on the provided DTO.
+     *
+     * @param dto the contract creation data
+     * @return the created contract as a DTO
+     */
     public ContractResponseDTO createContract(CreateContractDTO dto) {
 
         Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
@@ -65,47 +79,51 @@ public class ContractService {
         ContractType contractType = contractTypeRepository.findById(dto.getContractTypeId())
                 .orElseThrow(() -> new ContractTypeNotFoundException(dto.getContractTypeId()));
 
-        // Si el tipo de contrato es indefinido (ID = 1), no se permite terminationDate
+        // If contract type is indefinite (ID = 1), terminationDate must not be set
         if (contractType.getContractTypeId() == 1L && dto.getTerminationDate() != null) {
             throw new TerminationDateNotAllowedException(contractType.getContractTypeId());
         }
 
-        // Validar si se requiere terminationDate
+        // If the contract type requires a termination date, validate it exists
         if (contractType.isRequiresEndDate() && dto.getTerminationDate() == null) {
             throw new MissingTerminationDateException(dto.getContractTypeId());
         }
 
+        // Termination date cannot be before hire date
         if (dto.getTerminationDate() != null && dto.getTerminationDate().isBefore(dto.getHireDate())) {
             throw new InvalidTerminationDateException();
         }
 
         Contract contract = contractMapper.toEntityContract(dto);
-
         contract.setSchedule(schedule);
         contract.setContractType(contractType);
         contract.setStatus(ContractStatusEnum.ACTIVE.getValue());
-
-        int dailyHours = calculateDailyHours(schedule);
-        contract.setDailyHours(dailyHours);
+        contract.setDailyHours(calculateDailyHours(schedule));
 
         Contract saved = contractRepository.save(contract);
         return contractMapper.toResponseDTO(saved);
     }
 
+    /**
+     * Updates an existing contract based on the provided DTO.
+     *
+     * @param contractId the ID of the contract to update
+     * @param dto        the update data
+     * @return the updated contract as a DTO
+     */
     public ContractResponseDTO updateContract(Long contractId, UpdateContractDTO dto) {
         Contract existingContract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
 
-        // Validar y actualizar el horario
+        // Update schedule if provided
         if (dto.getScheduleId() != null) {
             Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
                     .orElseThrow(() -> new ScheduleNotFoundException(dto.getScheduleId()));
             existingContract.setSchedule(schedule);
-            int dailyHours = calculateDailyHours(schedule);
-            existingContract.setDailyHours(dailyHours);
+            existingContract.setDailyHours(calculateDailyHours(schedule));
         }
 
-        // Validar y actualizar la fecha de contratación
+        // Update hire date if provided
         if (dto.getHireDate() != null) {
             existingContract.setHireDate(dto.getHireDate());
         }
@@ -113,28 +131,28 @@ public class ContractService {
         boolean requiresEndDate = existingContract.getContractType().isRequiresEndDate();
         Long contractTypeId = existingContract.getContractType().getContractTypeId();
 
-        // Validación: se requiere terminationDate y no se pasó
+        // If contract type requires termination date but it's not provided
         if (requiresEndDate && dto.getTerminationDate() == null) {
             throw new MissingTerminationDateException(contractTypeId);
         }
 
-        // Validación: no se permite terminationDate para ciertos tipos
+        // If contract type doesn't allow termination date but it is provided
         if (!requiresEndDate && dto.getTerminationDate() != null && contractTypeId == 1L) {
             throw new TerminationDateNotAllowedException(contractTypeId);
         }
 
-        // Validación: coherencia de fechas
+        // Check that termination date is not before hire date
         if (dto.getTerminationDate() != null && existingContract.getHireDate() != null &&
                 dto.getTerminationDate().isBefore(existingContract.getHireDate())) {
             throw new InvalidTerminationDateException();
         }
 
-        // Actualizar terminationDate
+        // Update termination date
         if (dto.getTerminationDate() != null) {
             existingContract.setTerminationDate(dto.getTerminationDate());
         }
 
-        // Actualizar salario
+        // Update salary
         if (dto.getSalary() != null) {
             existingContract.setSalary(dto.getSalary());
         }
@@ -143,6 +161,12 @@ public class ContractService {
         return contractMapper.toResponseDTO(updated);
     }
 
+    /**
+     * Manually terminates a contract if it is currently active.
+     *
+     * @param contractId the ID of the contract to terminate
+     * @return the terminated contract as a DTO
+     */
     public ContractResponseDTO terminateContractManually(Long contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
@@ -163,9 +187,9 @@ public class ContractService {
     }
 
     /**
-     * This scheduled method automatically terminates contracts
-     * that have reached or passed their termination date.
-     * It runs every day at 11:59 PM.
+     * Automatically terminates contracts that have reached or passed their
+     * termination date.
+     * Scheduled to run every day at 11:59 PM.
      */
     @Scheduled(cron = "59 23 * * *")
     public void autoTerminateDueContracts() {
@@ -182,6 +206,12 @@ public class ContractService {
         contractRepository.saveAll(contractsToTerminate);
     }
 
+    /**
+     * Calculates the number of working hours per day based on the given schedule.
+     *
+     * @param schedule the work schedule
+     * @return number of daily working hours
+     */
     private int calculateDailyHours(Schedule schedule) {
         return (int) ChronoUnit.HOURS.between(schedule.getStartTime(), schedule.getEndTime());
     }

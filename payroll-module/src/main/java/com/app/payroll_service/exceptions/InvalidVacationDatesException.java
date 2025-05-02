@@ -5,6 +5,9 @@ package com.app.payroll_service.exceptions;
  */
 public class InvalidVacationDatesException extends RuntimeException {
 
+    /**
+     * Constructs a new InvalidVacationDatesException with a default message.
+     */
     public InvalidVacationDatesException() {
         super("Start date cannot be after end date.");
     }

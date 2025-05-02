@@ -9,8 +9,14 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.HashMap;
 
+/**
+ * Global exception handler for the application.
+ * Intercepts and formats exceptions into structured HTTP responses.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // --- Not Found Handlers ---
 
     @ExceptionHandler(ContractNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleContractNotFound(ContractNotFoundException ex) {
@@ -61,6 +67,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleVacationNotFound(VacationNotFoundException ex) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
+
+    // --- Bad Request Handlers ---
 
     @ExceptionHandler(InvalidLicenseDatesException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidLicenseDates(InvalidLicenseDatesException ex) {
@@ -138,15 +146,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(LicenseCanceledTerminatedRejectedException.class)
-    public ResponseEntity<Map<String, Object>> handleLicenseAlreadyCanceledOrTerminated(LicenseCanceledTerminatedRejectedException ex) {
+    public ResponseEntity<Map<String, Object>> handleLicenseAlreadyCanceledOrTerminated(
+            LicenseCanceledTerminatedRejectedException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(VacationStatusNotPendingApprovedException.class)
-    public ResponseEntity<Map<String, Object>> handleVacationAlreadyProcessed(VacationStatusNotPendingApprovedException ex) {
+    public ResponseEntity<Map<String, Object>> handleVacationAlreadyProcessed(
+            VacationStatusNotPendingApprovedException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    /**
+     * Handles validation errors for invalid method arguments.
+     *
+     * @param ex the exception thrown by the validator
+     * @return structured error response
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, Object> body = new HashMap<>();
@@ -154,7 +170,7 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
 
-        // Tomamos el primer mensaje de error
+        // Extracts the first validation message
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getDefaultMessage())
                 .findFirst()
@@ -164,6 +180,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Builds a standardized error response body.
+     *
+     * @param status  the HTTP status to return
+     * @param message the error message to include
+     * @return a ResponseEntity containing the structured error
+     */
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
@@ -172,4 +195,5 @@ public class GlobalExceptionHandler {
         body.put("message", message);
         return new ResponseEntity<>(body, status);
     }
+    
 }
