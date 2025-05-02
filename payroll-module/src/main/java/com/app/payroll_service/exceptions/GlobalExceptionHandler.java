@@ -157,6 +157,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(VacationStatusNotPendingException.class)
+    public ResponseEntity<Map<String, Object>> handleVacationAlreadyProcessed(VacationStatusNotPendingException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     /**
      * Handles validation errors for invalid method arguments.
      *
@@ -195,5 +200,5 @@ public class GlobalExceptionHandler {
         body.put("message", message);
         return new ResponseEntity<>(body, status);
     }
-    
+
 }

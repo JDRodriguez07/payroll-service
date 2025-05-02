@@ -23,17 +23,13 @@ public interface LicenseRepository extends JpaRepository<License, Long> {
     List<License> findByStatusIgnoreCase(String status);
 
     /**
-     * Retrieves a list of licenses that match the given status and have an end date
-     * either before or exactly equal to the specified dates.
+     * Retrieves all licenses with the given status whose end date is
+     * less than or equal to the specified date.
      *
-     * @param status the license status to match
-     * @param before end date must be before this date
-     * @param equals or equal to this specific date
+     * @param status the license status to filter (e.g., APPROVED)
+     * @param date   the comparison date (typically LocalDate.now())
      * @return list of licenses matching the criteria
      */
-    List<License> findByStatusAndEndDateBeforeOrEndDateEquals(
-            String status,
-            LocalDate before,
-            LocalDate equals);
+    List<License> findByStatusAndEndDateLessThanEqual(String status, LocalDate date);
 
 }

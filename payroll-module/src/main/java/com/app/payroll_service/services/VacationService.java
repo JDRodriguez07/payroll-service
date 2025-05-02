@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.app.payroll_service.dto.RequestVacationDTO;
@@ -52,6 +53,12 @@ public class VacationService {
         return vacationMapper.toResponseDTO(vacation);
     }
 
+    public List<VacationResponseDTO> getAllPendingVacations() {
+        List<Vacation> pendingVacations = vacationRepository
+                .findByStatusIgnoreCase(VacationStatusEnum.PENDING.getValue());
+        return vacationMapper.toResponseDTOList(pendingVacations);
+    }
+
     /**
      * Processes a new vacation request, validating the date range
      * and required number of business days.
@@ -90,7 +97,7 @@ public class VacationService {
                 .orElseThrow(() -> new VacationNotFoundException(vacationId));
 
         if (!VacationStatusEnum.PENDING.getValue().equals(vacation.getStatus())) {
-            throw new VacationStatusNotPendingApprovedException(vacationId);
+            throw new VacationStatusNotPendingException(vacationId);
         }
 
         vacation.setStatus(VacationStatusEnum.APPROVED.getValue());
@@ -138,6 +145,40 @@ public class VacationService {
 
         Vacation canceledVacation = vacationRepository.save(vacation);
         return vacationMapper.toResponseDTO(canceledVacation);
+    }
+
+    /**
+     * Scheduled task that automatically terminates approved vacations whose end
+     * date
+     * is today or earlier. This task runs every day at 11:59 PM but is skipped on
+     * weekends.
+     * 
+     * Business rule: vacation termination should only occur on business days,
+     * therefore this method does not run on Saturdays or Sundays.
+     * 
+     * It updates the status of qualifying vacation records to {@code TERMINATED}.
+     */
+    @Scheduled(cron = "59 23 * * *")
+    public void autoTerminateVacations() {
+        LocalDate today = LocalDate.now();
+        DayOfWeek todayDay = today.getDayOfWeek();
+
+        // Skip execution on weekends
+        if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
+            return;
+        }
+
+        // Fetch vacations in APPROVED status that have ended
+        List<Vacation> vacationsToTerminate = vacationRepository
+                .findByStatusAndEndDateLessThanEqual(
+                        VacationStatusEnum.APPROVED.getValue(), today);
+
+        // Update their status to TERMINATED
+        for (Vacation vacation : vacationsToTerminate) {
+            vacation.setStatus(VacationStatusEnum.TERMINATED.getValue());
+        }
+
+        vacationRepository.saveAll(vacationsToTerminate);
     }
 
     /**

@@ -196,8 +196,8 @@ public class ContractService {
         LocalDate today = LocalDate.now();
 
         List<Contract> contractsToTerminate = contractRepository
-                .findByStatusAndTerminationDateBeforeOrTerminationDateEquals(
-                        ContractStatusEnum.ACTIVE.getValue(), today, today);
+                .findByStatusAndTerminationDateLessThanEqual(
+                        ContractStatusEnum.ACTIVE.getValue(), today);
 
         for (Contract contract : contractsToTerminate) {
             contract.setStatus(ContractStatusEnum.TERMINATED.getValue());
