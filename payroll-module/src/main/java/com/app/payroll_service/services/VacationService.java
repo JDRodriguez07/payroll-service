@@ -59,6 +59,12 @@ public class VacationService {
         return vacationMapper.toResponseDTOList(pendingVacations);
     }
 
+    public List<VacationResponseDTO> getAllActiveVacations() {
+        List<Vacation> activeVacations = vacationRepository
+                .findByStatusIgnoreCase(VacationStatusEnum.APPROVED.getValue());
+        return vacationMapper.toResponseDTOList(activeVacations);
+    }
+
     /**
      * Processes a new vacation request, validating the date range
      * and required number of business days.
