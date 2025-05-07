@@ -1,14 +1,14 @@
 package com.app.payroll_service.services;
 
-import java.util.List;
-
+import com.app.payroll_service.dto.DeductionTypeResponseDTO;
+import com.app.payroll_service.exceptions.DeductionTypeNotFoundException;
+import com.app.payroll_service.mapper.DeductionTypeMapper;
+import com.app.payroll_service.models.DeductionType;
+import com.app.payroll_service.repository.DeductionTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.app.payroll_service.exceptions.DeductionTypeNotFoundException;
-import com.app.payroll_service.exceptions.DuplicateDeductionTypeNameException;
-import com.app.payroll_service.models.DeductionType;
-import com.app.payroll_service.repository.DeductionTypeRepository;
+import java.util.List;
 
 @Service
 public class DeductionTypeService {
@@ -16,81 +16,30 @@ public class DeductionTypeService {
     @Autowired
     private DeductionTypeRepository deductionTypeRepository;
 
+    @Autowired
+    private DeductionTypeMapper deductionTypeMapper;
+
     /**
-     * Retrieves all deduction types from the database.
+     * Retrieves all deduction types and maps them to response DTOs.
      *
-     * @return List of all deduction types
+     * @return a list of DeductionTypeResponseDTO
      */
-    public List<DeductionType> getAllDeductionTypes() {
-        return deductionTypeRepository.findAll();
+    public List<DeductionTypeResponseDTO> getAllDeductionTypes() {
+        List<DeductionType> types = deductionTypeRepository.findAll();
+        return deductionTypeMapper.toResponseDTOList(types);
     }
 
     /**
-     * Retrieves a deduction type by its ID.
+     * Retrieves a deduction type by its ID and maps it to a response DTO.
      *
-     * @param id Deduction type ID
-     * @return DeductionType
-     * @throws DeductionTypeNotFoundException if not found
+     * @param id the ID of the deduction type to retrieve
+     * @return the DeductionTypeResponseDTO
+     * @throws DeductionTypeNotFoundException if the deduction type does not exist
      */
-    public DeductionType getDeductionTypeById(Long id) {
-        return deductionTypeRepository.findById(id)
+    public DeductionTypeResponseDTO getDeductionTypeById(Long id) {
+        DeductionType type = deductionTypeRepository.findById(id)
                 .orElseThrow(() -> new DeductionTypeNotFoundException(id));
-    }
-
-    /**
-     * Creates a new deduction type. Prevents duplicates by name.
-     *
-     * @param deductionType The deduction type to create
-     * @return Created DeductionType
-     * @throws DuplicateDeductionTypeNameException if a type with the same name
-     *                                             exists
-     */
-    public DeductionType createDeductionType(DeductionType deductionType) {
-        deductionTypeRepository.findByNameIgnoreCase(deductionType.getName())
-                .ifPresent(existing -> {
-                    throw new DuplicateDeductionTypeNameException(deductionType.getName());
-                });
-
-        return deductionTypeRepository.save(deductionType);
-    }
-
-    /**
-     * Updates an existing deduction type. Prevents name collision with another
-     * type.
-     *
-     * @param id      ID of the deduction type to update
-     * @param updated Updated deduction type data
-     * @return Updated DeductionType
-     * @throws DeductionTypeNotFoundException      if not found
-     * @throws DuplicateDeductionTypeNameException if another type has the same name
-     */
-    public DeductionType updateDeductionType(Long id, DeductionType updated) {
-        DeductionType existing = deductionTypeRepository.findById(id)
-                .orElseThrow(() -> new DeductionTypeNotFoundException(id));
-
-        deductionTypeRepository.findByNameIgnoreCase(updated.getName()).ifPresent(other -> {
-            if (!other.getDeductionTypeId().equals(id)) {
-                throw new DuplicateDeductionTypeNameException(updated.getName());
-            }
-        });
-
-        existing.setName(updated.getName());
-        existing.setPercentage(updated.getPercentage());
-
-        return deductionTypeRepository.save(existing);
-    }
-
-    /**
-     * Deletes a deduction type by its ID.
-     *
-     * @param id Deduction type ID
-     * @throws DeductionTypeNotFoundException if not found
-     */
-    public void deleteDeductionType(Long id) {
-        if (!deductionTypeRepository.existsById(id)) {
-            throw new DeductionTypeNotFoundException(id);
-        }
-        deductionTypeRepository.deleteById(id);
+        return deductionTypeMapper.toResponseDTO(type);
     }
     
 }

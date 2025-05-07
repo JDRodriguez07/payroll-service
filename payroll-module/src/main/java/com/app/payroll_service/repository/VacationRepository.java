@@ -33,4 +33,8 @@ public interface VacationRepository extends JpaRepository<Vacation, Long> {
      */
     List<Vacation> findByStatusAndEndDateLessThanEqual(String status, LocalDate date);
 
+    List<Vacation> findByStatusAndStartDateLessThanEqual(String status, LocalDate startDate);
+
+    List<Vacation> findByStatusAndStartDate(String status, LocalDate startDate);
+
 }

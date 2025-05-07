@@ -153,6 +153,26 @@ public class VacationService {
         return vacationMapper.toResponseDTO(canceledVacation);
     }
 
+    @Scheduled(cron = "0 0 1 * * *") // Every day at 1:00 AM
+    public void autoActivateVacations() {
+        LocalDate today = LocalDate.now();
+
+        if (!isBusinessDay(today)) {
+            return;
+        }
+
+        // Activate vacations that were approved and should have already started
+        List<Vacation> vacationsToActivate = vacationRepository
+                .findByStatusAndStartDateLessThanEqual(
+                        VacationStatusEnum.APPROVED.getValue(), today);
+
+        for (Vacation vacation : vacationsToActivate) {
+            vacation.setStatus(VacationStatusEnum.ACTIVE.getValue());
+        }
+
+        vacationRepository.saveAll(vacationsToActivate);
+    }
+
     /**
      * Scheduled task that automatically terminates approved vacations whose end
      * date
@@ -167,17 +187,15 @@ public class VacationService {
     @Scheduled(cron = "59 23 * * *")
     public void autoTerminateVacations() {
         LocalDate today = LocalDate.now();
-        DayOfWeek todayDay = today.getDayOfWeek();
 
-        // Skip execution on weekends
-        if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
+        if (!isBusinessDay(today)) {
             return;
         }
 
         // Fetch vacations in APPROVED status that have ended
         List<Vacation> vacationsToTerminate = vacationRepository
                 .findByStatusAndEndDateLessThanEqual(
-                        VacationStatusEnum.APPROVED.getValue(), today);
+                        VacationStatusEnum.ACTIVE.getValue(), today);
 
         // Update their status to TERMINATED
         for (Vacation vacation : vacationsToTerminate) {
@@ -206,30 +224,9 @@ public class VacationService {
         return workDays;
     }
 
-    /**
-     * (Optional) Calculates an end date based on a start date and a number of
-     * business days,
-     * excluding weekends. This method is currently commented out.
-     *
-     * @param startDate    Start date of the vacation
-     * @param businessDays Number of working days
-     * @return Calculated end date
-     */
-    /*
-     * private LocalDate calculateEndDateSkippingWeekends(LocalDate startDate, int
-     * businessDays) {
-     * LocalDate result = startDate;
-     * int addedDays = 0;
-     * 
-     * while (addedDays < businessDays) {
-     * result = result.plusDays(1);
-     * DayOfWeek day = result.getDayOfWeek();
-     * if (day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY) {
-     * addedDays++;
-     * }
-     * }
-     * 
-     * return result;
-     * }
-     */
+    private boolean isBusinessDay(LocalDate date) {
+        DayOfWeek day = date.getDayOfWeek();
+        return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
+    }
+
 }

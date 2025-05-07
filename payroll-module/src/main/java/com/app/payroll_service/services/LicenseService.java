@@ -118,12 +118,32 @@ public class LicenseService {
         return licenseMapper.toResponseDTO(canceledLicense);
     }
 
+    @Scheduled(cron = "0 0 1 * * *") // Every day at 1:00 AM
+    public void autoActivateLicense() {
+        LocalDate today = LocalDate.now();
+        DayOfWeek todayDay = today.getDayOfWeek();
+
+        if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
+            return;
+        }
+
+        // Activate licenses that are approved and should have already started
+        List<License> licensesToActivate = licenseRepository.findByStatusAndStartDateLessThanEqual(
+                LicenseStatusEnum.APPROVED.getValue(), today);
+
+        for (License license : licensesToActivate) {
+            license.setStatus(LicenseStatusEnum.ACTIVE.getValue());
+        }
+
+        licenseRepository.saveAll(licensesToActivate);
+    }
+
     /**
      * Scheduled method that automatically terminates licenses whose end date has
      * passed.
      * Runs daily at 11:59 PM.
      */
-    @Scheduled(cron = "59 23 * * *")
+    @Scheduled(cron = "59 23 * * *") // Every day at 11:59 PM
     public void autoTerminateLicense() {
         LocalDate today = LocalDate.now();
         DayOfWeek todayDay = today.getDayOfWeek();
@@ -132,9 +152,9 @@ public class LicenseService {
             return;
         }
 
+        // Only terminate licenses that are ACTIVE and ended today or earlier
         List<License> licensesToTerminate = licenseRepository.findByStatusAndEndDateLessThanEqual(
-                LicenseStatusEnum.APPROVED.getValue(),
-                today);
+                LicenseStatusEnum.ACTIVE.getValue(), today);
 
         for (License license : licensesToTerminate) {
             license.setStatus(LicenseStatusEnum.TERMINATED.getValue());

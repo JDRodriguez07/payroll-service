@@ -24,4 +24,6 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
      */
     List<Contract> findByStatusAndTerminationDateLessThanEqual(String status, LocalDate date);
 
+    List<Contract> findByStatus(String status);
+
 }

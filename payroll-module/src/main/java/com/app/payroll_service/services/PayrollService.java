@@ -1,17 +1,28 @@
 package com.app.payroll_service.services;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.app.payroll_service.exceptions.ContractNotFoundException;
+import com.app.payroll_service.enums.PayrollStatusEnum;
+import com.app.payroll_service.enums.ContractStatusEnum;
+
+import com.app.payroll_service.exceptions.IsNotLastWorkDayOfMonthException;
 import com.app.payroll_service.exceptions.PayrollNotFoundException;
 import com.app.payroll_service.models.Contract;
+import com.app.payroll_service.models.Deduction;
+import com.app.payroll_service.models.DeductionType;
 import com.app.payroll_service.models.Payroll;
 import com.app.payroll_service.models.PayrollDeductions;
 import com.app.payroll_service.repository.ContractRepository;
+import com.app.payroll_service.repository.DeductionRepository;
+import com.app.payroll_service.repository.DeductionTypeRepository;
+import com.app.payroll_service.repository.PayrollDeductionsRepository;
 import com.app.payroll_service.repository.PayrollRepository;
 
 @Service
@@ -24,7 +35,13 @@ public class PayrollService {
     private ContractRepository contractRepository;
 
     @Autowired
-    private PayrollDeductionsService payrollDeductionsService;
+    private PayrollDeductionsRepository payrollDeductionsRepository;
+
+    @Autowired
+    private DeductionTypeRepository deductionTypeRepository;
+
+    @Autowired
+    private DeductionRepository deductionRepository;
 
     /**
      * Retrieves all payroll records.
@@ -45,69 +62,92 @@ public class PayrollService {
                 .orElseThrow(() -> new PayrollNotFoundException(id));
     }
 
-    /**
-     * Creates a new payroll, generates its deductions, and calculates net salary.
-     *
-     * @param payroll Payroll to create
-     * @return Created payroll with deductions and net salary
-     */
-    /*public Payroll createPayroll(Payroll payroll) {
-        // Step 1: Save payroll to generate its ID
-        Payroll savedPayroll = payrollRepository.save(payroll);
+    public void generateMonthlyPayrolls() {
 
-        // Step 2: Get contract and salary based on userId
-        Contract contract = contractRepository.findByUserId(savedPayroll.getUserId())
-                .orElseThrow(() -> new ContractNotFoundException(savedPayroll.getUserId()));
+        LocalDate today = LocalDate.now();
 
-        BigDecimal salary = contract.getSalary();
+        if (!isLastBusinessDayOfMonth(today)) {
+            throw new IsNotLastWorkDayOfMonthException();
+        }
 
-        // Step 3: Generate deductions and calculate total
-        List<PayrollDeductions> deductions = payrollDeductionsService.generateDeductionsForPayroll(savedPayroll);
+        LocalDate initialPeriod = today.withDayOfMonth(1);
+        LocalDate finalPeriod = today.withDayOfMonth(today.lengthOfMonth());
+        BigDecimal defaultPercentage = BigDecimal.valueOf(0.04);
 
-        BigDecimal totalDeductions = deductions.stream()
-                .map(pd -> pd.getDeduction().getAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Find or create the HEALTH deduction type
+        DeductionType healthType = deductionTypeRepository.findByNameIgnoreCase("Salud")
+                .orElseGet(() -> {
+                    DeductionType created = new DeductionType();
+                    created.setName("Salud");
+                    created.setPercentage(defaultPercentage);
+                    return deductionTypeRepository.save(created);
+                });
 
-        // Step 4: Set net salary and associate deductions
-        BigDecimal netSalary = salary.subtract(totalDeductions);
-        savedPayroll.setNetSalary(netSalary);
-        savedPayroll.setPayrollDeductions(deductions);
+        // Find or create the PENSION deduction type
+        DeductionType pensionType = deductionTypeRepository.findByNameIgnoreCase("Pension")
+                .orElseGet(() -> {
+                    DeductionType created = new DeductionType();
+                    created.setName("Pension");
+                    created.setPercentage(defaultPercentage);
+                    return deductionTypeRepository.save(created);
+                });
 
-        // Step 5: Save updated payroll
-        return payrollRepository.save(savedPayroll);
+        List<Contract> contracts = contractRepository.findByStatus(ContractStatusEnum.ACTIVE.getValue());
+
+        for (Contract contract : contracts) {
+
+            BigDecimal grossSalary = contract.getSalary();
+            BigDecimal healthDeductionAmount = grossSalary.multiply(healthType.getPercentage());
+            BigDecimal pensionDeductionAmount = grossSalary.multiply(pensionType.getPercentage());
+            BigDecimal totalDeductions = healthDeductionAmount.add(pensionDeductionAmount);
+            BigDecimal netSalary = grossSalary.subtract(totalDeductions);
+
+            Payroll payroll = new Payroll();
+            payroll.setUserId(1L); // Pending this part with userId
+            payroll.setPaidDays(30);
+            payroll.setInitialPeriod(initialPeriod);
+            payroll.setFinalPeriod(finalPeriod);
+            payroll.setNetSalary(netSalary);
+            payroll.setStatus(PayrollStatusEnum.PAID.getValue());
+
+            Payroll savedPayroll = payrollRepository.save(payroll);
+
+            // Guardar deducción de SALUD
+            Deduction healthDeduction = new Deduction(healthType, healthDeductionAmount);
+            healthDeduction = deductionRepository.save(healthDeduction);
+
+            PayrollDeductions payrollHealthDeduction = new PayrollDeductions();
+            payrollHealthDeduction.setPayroll(savedPayroll);
+            payrollHealthDeduction.setDeduction(healthDeduction);
+            payrollDeductionsRepository.save(payrollHealthDeduction);
+
+            // Guardar deducción de PENSIÓN
+            Deduction pensionDeduction = new Deduction(pensionType, pensionDeductionAmount);
+            pensionDeduction = deductionRepository.save(pensionDeduction);
+
+            PayrollDeductions payrollPensionDeduction = new PayrollDeductions();
+            payrollPensionDeduction.setPayroll(savedPayroll);
+            payrollPensionDeduction.setDeduction(pensionDeduction);
+            payrollDeductionsRepository.save(payrollPensionDeduction);
+        }
+
+        
     }
 
-    /**
-     * Updates an existing payroll.
-     *
-     * @param id      Payroll ID
-     * @param updated Updated payroll
-     * @return Updated payroll
-     */
-    public Payroll updatePayroll(Long id, Payroll updated) {
-        Payroll existing = payrollRepository.findById(id)
-                .orElseThrow(() -> new PayrollNotFoundException(id));
+    public static boolean isLastBusinessDayOfMonth(LocalDate today) {
+        today = LocalDate.now();
 
-        existing.setUserId(updated.getUserId());
-        existing.setPaidDays(updated.getPaidDays());
-        existing.setInitialPeriod(updated.getInitialPeriod());
-        existing.setFinalPeriod(updated.getFinalPeriod());
-        existing.setNetSalary(updated.getNetSalary());
-        existing.setStatus(updated.getStatus());
+        // Get the last day of the month
+        LocalDate lastDayOfMonth = today.with(TemporalAdjusters.lastDayOfMonth());
 
-        return payrollRepository.save(existing);
+        // Find the last business day (not Saturday or Sunday)
+        LocalDate lastBusinessDay = lastDayOfMonth;
+        while (lastBusinessDay.getDayOfWeek() == DayOfWeek.SATURDAY ||
+                lastBusinessDay.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            lastBusinessDay = lastBusinessDay.minusDays(1);
+        }
+
+        return today.equals(lastBusinessDay);
     }
 
-    /**
-     * Deletes a payroll and all its deductions.
-     *
-     * @param id Payroll ID
-     */
-    public void deletePayroll(Long id) {
-        Payroll payroll = payrollRepository.findById(id)
-                .orElseThrow(() -> new PayrollNotFoundException(id));
-
-        payrollDeductionsService.deleteDeductionsByPayroll(payroll);
-        payrollRepository.delete(payroll);
-    }
 }

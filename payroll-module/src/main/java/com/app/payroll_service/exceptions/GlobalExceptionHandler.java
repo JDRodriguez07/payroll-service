@@ -162,6 +162,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(IsNotLastWorkDayOfMonthException.class)
+    public ResponseEntity<Map<String, Object>> handleIsNotLastWorkDayOfMonth(IsNotLastWorkDayOfMonthException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     /**
      * Handles validation errors for invalid method arguments.
      *
