@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * for background tasks such as automatic contract and license termination.
  */
 @SpringBootApplication
-@EnableScheduling
+//@EnableScheduling
 public class PayrollServiceApplication {
 
     /**
