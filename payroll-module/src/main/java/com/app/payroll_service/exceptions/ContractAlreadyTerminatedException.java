@@ -14,6 +14,6 @@ public class ContractAlreadyTerminatedException extends RuntimeException {
      *                   inactive
      */
     public ContractAlreadyTerminatedException(Long contractId) {
-        super("Contract with ID " + contractId + " is already terminated or inactive.");
+        super("Contract with ID " + contractId + " is already terminated.");
     }
 }

@@ -72,11 +72,11 @@ public class PayrollService {
 
         LocalDate initialPeriod = today.withDayOfMonth(1);
         LocalDate finalPeriod = today.withDayOfMonth(today.lengthOfMonth());
-        BigDecimal defaultPercentage = BigDecimal.valueOf(0.04);
-
+        
         // Find or create the HEALTH deduction type
         DeductionType healthType = deductionTypeRepository.findByNameIgnoreCase("Salud")
                 .orElseGet(() -> {
+                    BigDecimal defaultPercentage = BigDecimal.valueOf(0.04);
                     DeductionType created = new DeductionType();
                     created.setName("Salud");
                     created.setPercentage(defaultPercentage);
@@ -86,6 +86,7 @@ public class PayrollService {
         // Find or create the PENSION deduction type
         DeductionType pensionType = deductionTypeRepository.findByNameIgnoreCase("Pension")
                 .orElseGet(() -> {
+                    BigDecimal defaultPercentage = BigDecimal.valueOf(0.04);
                     DeductionType created = new DeductionType();
                     created.setName("Pension");
                     created.setPercentage(defaultPercentage);

@@ -35,6 +35,8 @@ services:
       dockerfile: Dockerfile
     container_name: backend_payroll_service
     restart: always
+    environment:
+      - TZ=America/Bogota
     ports:
       - 9020:8080
     depends_on:
