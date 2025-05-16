@@ -89,8 +89,9 @@ public class LicenseService {
         License license = licenseRepository.findById(licenseId)
                 .orElseThrow(() -> new LicenseNotFoundException(licenseId));
 
-        if (!LicenseStatusEnum.PENDING.getValue().equals(license.getStatus())) {
-            throw new LicenseStatusNotPendingException(licenseId);
+        if (!(LicenseStatusEnum.APPROVED.getValue().equals(license.getStatus())
+                || LicenseStatusEnum.PENDING.getValue().equals(license.getStatus()))) {
+            throw new LicenseNotPendingApprovedStatusException(licenseId);
         }
 
         license.setStatus(LicenseStatusEnum.REJECTED.getValue());
@@ -118,52 +119,54 @@ public class LicenseService {
         return licenseMapper.toResponseDTO(canceledLicense);
     }
 
-    // @Scheduled(cron = "0 0 1 * * *") // Every day at 1:00 AM
-    // public void autoActivateLicense() {
-    // LocalDate today = LocalDate.now();
-    // DayOfWeek todayDay = today.getDayOfWeek();
+    @Scheduled(cron = "0 25 12 * * *")
+    public void autoActivateLicense() {
+        System.out.println("Running Auto Activate Licenses");
+        LocalDate today = LocalDate.now();
+        DayOfWeek todayDay = today.getDayOfWeek();
 
-    // if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
-    // return;
-    // }
+        if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
+            return;
+        }
 
-    // // Activate licenses that are approved and should have already started
-    // List<License> licensesToActivate =
-    // licenseRepository.findByStatusAndStartDateLessThanEqual(
-    // LicenseStatusEnum.APPROVED.getValue(), today);
+        // Activate licenses that are approved and should have already started
+        List<License> licensesToActivate = licenseRepository.findByStatusAndStartDateLessThanEqual(
+                LicenseStatusEnum.APPROVED.getValue(), today);
 
-    // for (License license : licensesToActivate) {
-    // license.setStatus(LicenseStatusEnum.ACTIVE.getValue());
-    // }
+        for (License license : licensesToActivate) {
+            license.setStatus(LicenseStatusEnum.ACTIVE.getValue());
+        }
 
-    // licenseRepository.saveAll(licensesToActivate);
-    // }
+        licenseRepository.saveAll(licensesToActivate);
+        System.out.println("Licenses activated: " + licensesToActivate.size());
+    }
 
     /**
      * Scheduled method that automatically terminates licenses whose end date has
      * passed.
      * Runs daily at 11:59 PM.
      */
-    // @Scheduled(cron = "59 23 * * *") // Every day at 11:59 PM
-    // public void autoTerminateLicense() {
-    // LocalDate today = LocalDate.now();
-    // DayOfWeek todayDay = today.getDayOfWeek();
+    @Scheduled(cron = "0 30 12 * * *")
+    public void autoTerminateLicense() {
+        System.out.println("Running Auto Terminate Licenses");
+        LocalDate today = LocalDate.now();
+        DayOfWeek todayDay = today.getDayOfWeek();
 
-    // if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
-    // return;
-    // }
+        if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
+            return;
+        }
 
-    // // Only terminate licenses that are ACTIVE and ended today or earlier
-    // List<License> licensesToTerminate =
-    // licenseRepository.findByStatusAndEndDateLessThanEqual(
-    // LicenseStatusEnum.ACTIVE.getValue(), today);
+        // // Only terminate licenses that are ACTIVE and ended today or earlier
+        List<License> licensesToTerminate = licenseRepository.findByStatusAndEndDateLessThanEqual(
+                LicenseStatusEnum.ACTIVE.getValue(), today);
 
-    // for (License license : licensesToTerminate) {
-    // license.setStatus(LicenseStatusEnum.TERMINATED.getValue());
-    // }
+        for (License license : licensesToTerminate) {
+            license.setStatus(LicenseStatusEnum.TERMINATED.getValue());
+        }
 
-    // licenseRepository.saveAll(licensesToTerminate);
-    // }
+        licenseRepository.saveAll(licensesToTerminate);
+        System.out.println("Licenses terminated: " + licensesToTerminate.size());
+    }
 
     /**
      * Calculates the number of working days (excluding weekends) between two dates.
@@ -216,6 +219,65 @@ public class LicenseService {
     public List<LicenseResponseDTO> getAllPendingLicenses() {
         List<License> pendingLicenses = licenseRepository.findByStatusIgnoreCase(LicenseStatusEnum.PENDING.getValue());
         return licenseMapper.toResponseDTOList(pendingLicenses);
+    }
+
+    /**
+     * Retrieves all licenses that are currently in APPROVED status.
+     *
+     * @return a list of LicenseResponseDTO objects representing the approved
+     *         licenses
+     */
+    public List<LicenseResponseDTO> getAllApprovedLicenses() {
+        List<License> approvedLicenses = licenseRepository
+                .findByStatusIgnoreCase(LicenseStatusEnum.APPROVED.getValue());
+        return licenseMapper.toResponseDTOList(approvedLicenses);
+    }
+
+    /**
+     * Retrieves all licenses that are currently in REJECTED status.
+     *
+     * @return a list of LicenseResponseDTO objects representing the rejected
+     *         licenses
+     */
+    public List<LicenseResponseDTO> getAllRejectedLicenses() {
+        List<License> rejectedLicenses = licenseRepository
+                .findByStatusIgnoreCase(LicenseStatusEnum.REJECTED.getValue());
+        return licenseMapper.toResponseDTOList(rejectedLicenses);
+    }
+
+    /**
+     * Retrieves all licenses that are currently in CANCELED status.
+     *
+     * @return a list of LicenseResponseDTO objects representing the canceled
+     *         licenses
+     */
+    public List<LicenseResponseDTO> getAllCanceledLicenses() {
+        List<License> canceledLicenses = licenseRepository
+                .findByStatusIgnoreCase(LicenseStatusEnum.CANCELED.getValue());
+        return licenseMapper.toResponseDTOList(canceledLicenses);
+    }
+
+    /**
+     * Retrieves all licenses that are currently in TERMINATED status.
+     *
+     * @return a list of LicenseResponseDTO objects representing the terminated
+     *         licenses
+     */
+    public List<LicenseResponseDTO> getAllTerminatedLicenses() {
+        List<License> terminatedLicenses = licenseRepository
+                .findByStatusIgnoreCase(LicenseStatusEnum.TERMINATED.getValue());
+        return licenseMapper.toResponseDTOList(terminatedLicenses);
+    }
+
+    /**
+     * Retrieves all licenses that are currently in ACTIVE status.
+     *
+     * @return a list of LicenseResponseDTO objects representing the active
+     *         licenses
+     */
+    public List<LicenseResponseDTO> getAllActiveLicenses() {
+        List<License> activeLicenses = licenseRepository.findByStatusIgnoreCase(LicenseStatusEnum.ACTIVE.getValue());
+        return licenseMapper.toResponseDTOList(activeLicenses);
     }
 
 }

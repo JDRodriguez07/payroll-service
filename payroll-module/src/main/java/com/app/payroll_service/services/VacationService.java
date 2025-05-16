@@ -53,16 +53,73 @@ public class VacationService {
         return vacationMapper.toResponseDTO(vacation);
     }
 
+    /**
+     * Retrieves all vacations currently in PENDING status.
+     *
+     * @return a list of VacationResponseDTOs with status PENDING
+     */
     public List<VacationResponseDTO> getAllPendingVacations() {
         List<Vacation> pendingVacations = vacationRepository
                 .findByStatusIgnoreCase(VacationStatusEnum.PENDING.getValue());
         return vacationMapper.toResponseDTOList(pendingVacations);
     }
 
+    /**
+     * Retrieves all vacations currently in ACTIVE status.
+     *
+     * @return a list of VacationResponseDTOs with status ACTIVE
+     */
     public List<VacationResponseDTO> getAllActiveVacations() {
         List<Vacation> activeVacations = vacationRepository
-                .findByStatusIgnoreCase(VacationStatusEnum.APPROVED.getValue());
+                .findByStatusIgnoreCase(VacationStatusEnum.ACTIVE.getValue());
         return vacationMapper.toResponseDTOList(activeVacations);
+    }
+
+    /**
+     * Retrieves all vacations currently in APPROVED status.
+     *
+     * @return a list of VacationResponseDTOs with status APPROVED
+     */
+    public List<VacationResponseDTO> getAllApprovedVacations() {
+        List<Vacation> approvedVacations = vacationRepository
+                .findByStatusIgnoreCase(VacationStatusEnum.APPROVED.getValue());
+        return vacationMapper.toResponseDTOList(approvedVacations);
+    }
+
+    /**
+     * Retrieves all vacations currently in TERMINATED status.
+     * These vacations have completed their duration.
+     *
+     * @return a list of VacationResponseDTOs with status TERMINATED
+     */
+    public List<VacationResponseDTO> getAllTerminatedVacations() {
+        List<Vacation> terminatedVacations = vacationRepository
+                .findByStatusIgnoreCase(VacationStatusEnum.TERMINATED.getValue());
+        return vacationMapper.toResponseDTOList(terminatedVacations);
+    }
+
+    /**
+     * Retrieves all vacations currently in REJECTED status.
+     * These vacations were not approved.
+     *
+     * @return a list of VacationResponseDTOs with status REJECTED
+     */
+    public List<VacationResponseDTO> getAllRejectedVacations() {
+        List<Vacation> rejectedVacations = vacationRepository
+                .findByStatusIgnoreCase(VacationStatusEnum.REJECTED.getValue());
+        return vacationMapper.toResponseDTOList(rejectedVacations);
+    }
+
+    /**
+     * Retrieves all vacations currently in CANCELED status.
+     * These vacations were manually canceled before or after approval.
+     *
+     * @return a list of VacationResponseDTOs with status CANCELED
+     */
+    public List<VacationResponseDTO> getAllCanceledVacations() {
+        List<Vacation> canceledVacations = vacationRepository
+                .findByStatusIgnoreCase(VacationStatusEnum.CANCELED.getValue());
+        return vacationMapper.toResponseDTOList(canceledVacations);
     }
 
     /**
@@ -122,7 +179,8 @@ public class VacationService {
         Vacation vacation = vacationRepository.findById(vacationId)
                 .orElseThrow(() -> new VacationNotFoundException(vacationId));
 
-        if (!VacationStatusEnum.PENDING.getValue().equals(vacation.getStatus())) {
+        if (!(VacationStatusEnum.PENDING.getValue().equals(vacation.getStatus()) ||
+                VacationStatusEnum.APPROVED.getValue().equals(vacation.getStatus()))) {
             throw new VacationStatusNotPendingApprovedException(vacationId);
         }
 
@@ -153,30 +211,42 @@ public class VacationService {
         return vacationMapper.toResponseDTO(canceledVacation);
     }
 
-    // @Scheduled(cron = "0 0 1 * * *") // Every day at 1:00 AM
-    // public void autoActivateVacations() {
-    //     LocalDate today = LocalDate.now();
+    /**
+     * Scheduled task that automatically activates vacations.
+     * <p>
+     * This method runs daily at 1:00 AM and activates all vacation records
+     * that are in APPROVED status and have a start date less than or equal to
+     * today.
+     * It skips execution on weekends.
+     * </p>
+     * 
+     * Business rule: A vacation becomes ACTIVE on its start date to ensure
+     * that the day is counted from the beginning of the workday.
+     */
+    @Scheduled(cron = "0 00 01 * * *") // Every day at 1:00 AM
+    public void autoActivateVacations() {
+        LocalDate today = LocalDate.now();
 
-    //     if (!isBusinessDay(today)) {
-    //         return;
-    //     }
+        if (!isBusinessDay(today)) {
+            return;
+        }
 
-    //     // Activate vacations that were approved and should have already started
-    //     List<Vacation> vacationsToActivate = vacationRepository
-    //             .findByStatusAndStartDateLessThanEqual(
-    //                     VacationStatusEnum.APPROVED.getValue(), today);
+        // Activate vacations that were approved and should have already started
+        List<Vacation> vacationsToActivate = vacationRepository
+                .findByStatusAndStartDateLessThanEqual(
+                        VacationStatusEnum.APPROVED.getValue(), today);
 
-    //     for (Vacation vacation : vacationsToActivate) {
-    //         vacation.setStatus(VacationStatusEnum.ACTIVE.getValue());
-    //     }
+        for (Vacation vacation : vacationsToActivate) {
+            vacation.setStatus(VacationStatusEnum.ACTIVE.getValue());
+        }
 
-    //     vacationRepository.saveAll(vacationsToActivate);
-    // }
+        vacationRepository.saveAll(vacationsToActivate);
+    }
 
     /**
      * Scheduled task that automatically terminates approved vacations whose end
      * date
-     * is today or earlier. This task runs every day at 11:59 PM but is skipped on
+     * is today or earlier. This task runs every day at 11:55 PM but is skipped on
      * weekends.
      * 
      * Business rule: vacation termination should only occur on business days,
@@ -184,26 +254,26 @@ public class VacationService {
      * 
      * It updates the status of qualifying vacation records to {@code TERMINATED}.
      */
-    // @Scheduled(cron = "59 23 * * *")
-    // public void autoTerminateVacations() {
-    //     LocalDate today = LocalDate.now();
+    @Scheduled(cron = "0 55 23 * * *")
+    public void autoTerminateVacations() {
+        LocalDate today = LocalDate.now();
 
-    //     if (!isBusinessDay(today)) {
-    //         return;
-    //     }
+        if (!isBusinessDay(today)) {
+            return;
+        }
 
-    //     // Fetch vacations in APPROVED status that have ended
-    //     List<Vacation> vacationsToTerminate = vacationRepository
-    //             .findByStatusAndEndDateLessThanEqual(
-    //                     VacationStatusEnum.ACTIVE.getValue(), today);
+        // Fetch vacations in APPROVED status that have ended
+        List<Vacation> vacationsToTerminate = vacationRepository
+                .findByStatusAndEndDateLessThanEqual(
+                        VacationStatusEnum.ACTIVE.getValue(), today);
 
-    //     // Update their status to TERMINATED
-    //     for (Vacation vacation : vacationsToTerminate) {
-    //         vacation.setStatus(VacationStatusEnum.TERMINATED.getValue());
-    //     }
+        // Update their status to TERMINATED
+        for (Vacation vacation : vacationsToTerminate) {
+            vacation.setStatus(VacationStatusEnum.TERMINATED.getValue());
+        }
 
-    //     vacationRepository.saveAll(vacationsToTerminate);
-    // }
+        vacationRepository.saveAll(vacationsToTerminate);
+    }
 
     /**
      * Calculates the number of working days (Monday–Friday) between two dates.
@@ -224,6 +294,13 @@ public class VacationService {
         return workDays;
     }
 
+    /**
+     * Checks whether a given date falls on a business day (Monday to Friday).
+     *
+     * @param date the date to evaluate
+     * @return true if the date is a business day; false if it falls on Saturday or
+     *         Sunday
+     */
     private boolean isBusinessDay(LocalDate date) {
         DayOfWeek day = date.getDayOfWeek();
         return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;

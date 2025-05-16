@@ -106,9 +106,49 @@ public class VacationController {
      *
      * @return a list of approved vacations as response DTOs
      */
-    @GetMapping("/approved")
+    @GetMapping("/active")
     public ResponseEntity<List<VacationResponseDTO>> getAllActiveVacations() {
         return ResponseEntity.ok(vacationService.getAllActiveVacations());
+    }
+
+    /**
+     * Retrieves all vacation requests currently in ACTIVE status.
+     *
+     * @return a list of active vacations as response DTOs
+     */
+    @GetMapping("/approved")
+    public ResponseEntity<List<VacationResponseDTO>> getAllApprovedVacations() {
+        return ResponseEntity.ok(vacationService.getAllApprovedVacations());
+    }
+
+    /**
+     * Retrieves all vacations with TERMINATED status.
+     *
+     * @return list of terminated vacations as response DTOs
+     */
+    @GetMapping("/terminated")
+    public ResponseEntity<List<VacationResponseDTO>> getAllTerminatedVacations() {
+        return ResponseEntity.ok(vacationService.getAllTerminatedVacations());
+    }
+
+    /**
+     * Retrieves all vacations with REJECTED status.
+     *
+     * @return list of rejected vacations as response DTOs
+     */
+    @GetMapping("/rejected")
+    public ResponseEntity<List<VacationResponseDTO>> getAllRejectedVacations() {
+        return ResponseEntity.ok(vacationService.getAllRejectedVacations());
+    }
+
+    /**
+     * Retrieves all vacations with CANCELED status.
+     *
+     * @return list of canceled vacations as response DTOs
+     */
+    @GetMapping("/canceled")
+    public ResponseEntity<List<VacationResponseDTO>> getAllCanceledVacations() {
+        return ResponseEntity.ok(vacationService.getAllCanceledVacations());
     }
 
 }
