@@ -72,7 +72,7 @@ public class PayrollService {
 
         LocalDate initialPeriod = today.withDayOfMonth(1);
         LocalDate finalPeriod = today.withDayOfMonth(today.lengthOfMonth());
-        
+
         // Find or create the HEALTH deduction type
         DeductionType healthType = deductionTypeRepository.findByNameIgnoreCase("Salud")
                 .orElseGet(() -> {
