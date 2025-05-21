@@ -1,8 +1,9 @@
 package com.app.payroll_service.models;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.*;
@@ -32,20 +33,21 @@ public class Contract {
      * Reference to the type of contract.
      */
     @ManyToOne
-    @JoinColumn(name = "contract_type", nullable = false)
+    @JoinColumn(name = "contract_type_id", nullable = false)
     private ContractType contractType;
 
     /**
      * Date when the contract started.
      */
     @Column(name = "hire_date", nullable = false)
-    private Date hireDate;
+    private LocalDate hireDate;
 
     /**
      * Date when the contract ended (nullable for ongoing contracts).
      */
     @Column(name = "termination_date")
-    private Date terminationDate;
+    @Temporal(TemporalType.DATE)
+    private LocalDate terminationDate;
 
     /**
      * Number of working hours per day defined in the contract.
@@ -58,6 +60,12 @@ public class Contract {
      */
     @Column(name = "salary", nullable = false, precision = 10, scale = 2)
     private BigDecimal salary;
+
+    /**
+     * Status of the contract (active or inactive).
+     */
+    @Column(name = "status", nullable = false)
+    private String status;
 
     /**
      * Timestamp when the contract record was created.

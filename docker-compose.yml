@@ -7,12 +7,12 @@ services:
     container_name: mysql_payroll_service
     restart: always
     ports:
-      - 3308:3306
+      - 1121:3306
     volumes:
       - ./Config/mysql:/var/lib/mysql
     hostname: apps_database
     networks:
-      - payroll_app
+      - red_microservicios
     healthcheck:
         test: ["CMD","mysql", "-u", "root", "-pPayRollService123*"]
         interval: 30s
@@ -22,12 +22,12 @@ services:
   # - The adminer is a tool for managing content in databases.
   adminer:
     image: adminer
-    container_name: adminer_wms
+    container_name: adminer_payroll_service
     restart: always
     ports:
-      - 9010:8080
+      - 1122:8080
     networks:
-      - payroll_app
+      - red_microservicios
 # --------------------------------------------------------------------
   payroll_service:
     build:
@@ -36,14 +36,12 @@ services:
     container_name: backend_payroll_service
     restart: always
     ports:
-      - 9020:8080
+      - 1123:8080
     depends_on:
        payroll_db:
          condition: service_healthy
     networks:
-      - payroll_app
-
+      - red_microservicios
 networks:
-  payroll_app:
-      driver: bridge
-      name: payroll_app
+  red_microservicios:
+    external: true

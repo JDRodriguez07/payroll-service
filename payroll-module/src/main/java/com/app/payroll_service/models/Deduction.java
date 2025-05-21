@@ -57,4 +57,12 @@ public class Deduction {
     @UpdateTimestamp
     @Column(name = "updated_at", columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
+
+    public Deduction(DeductionType deductionType, BigDecimal amount) {
+        this.deductionType = deductionType;
+        this.amount = amount;
+    }
+
+    public Deduction() {
+    }
 }

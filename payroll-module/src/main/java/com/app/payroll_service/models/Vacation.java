@@ -1,6 +1,8 @@
 package com.app.payroll_service.models;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import lombok.Data;
@@ -29,13 +31,13 @@ public class Vacation {
      * Start date and time of the vacation period.
      */
     @Column(name = "start_date", nullable = false)
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     /**
      * End date and time of the vacation period.
      */
     @Column(name = "end_date", nullable = false)
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     /**
      * Number of vacation days taken.
