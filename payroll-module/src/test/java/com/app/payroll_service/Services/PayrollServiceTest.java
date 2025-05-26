@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
@@ -26,7 +26,6 @@ import com.app.payroll_service.repository.DeductionRepository;
 import com.app.payroll_service.repository.DeductionTypeRepository;
 import com.app.payroll_service.repository.PayrollDeductionsRepository;
 import com.app.payroll_service.repository.PayrollRepository;
-import com.app.payroll_service.services.PayrollService;
 
 @ExtendWith(MockitoExtension.class)
 public class PayrollServiceTest {

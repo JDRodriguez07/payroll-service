@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +20,6 @@ import com.app.payroll_service.exceptions.DeductionNotFoundException;
 import com.app.payroll_service.mapper.DeductionMapper;
 import com.app.payroll_service.models.PayrollDeductions;
 import com.app.payroll_service.repository.PayrollDeductionsRepository;
-import com.app.payroll_service.services.DeductionService;
 
 class DeductionServiceTest {
 

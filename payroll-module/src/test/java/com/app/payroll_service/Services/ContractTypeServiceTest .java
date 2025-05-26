@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -17,7 +17,6 @@ import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
 import com.app.payroll_service.mapper.ContractTypeMapper;
 import com.app.payroll_service.models.ContractType;
 import com.app.payroll_service.repository.ContractTypeRepository;
-import com.app.payroll_service.services.ContractTypeService;
 
 class ContractTypeServiceTest {
 

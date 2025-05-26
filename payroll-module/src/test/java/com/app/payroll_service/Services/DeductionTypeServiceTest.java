@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,7 +22,6 @@ import com.app.payroll_service.exceptions.DeductionTypeNotFoundException;
 import com.app.payroll_service.mapper.DeductionTypeMapper;
 import com.app.payroll_service.models.DeductionType;
 import com.app.payroll_service.repository.DeductionTypeRepository;
-import com.app.payroll_service.services.DeductionTypeService;
 
 @ExtendWith(MockitoExtension.class)
 class DeductionTypeServiceTest {

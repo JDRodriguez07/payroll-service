@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,7 +34,6 @@ import com.app.payroll_service.exceptions.VacationStatusNotPendingException;
 import com.app.payroll_service.mapper.VacationMapper;
 import com.app.payroll_service.models.Vacation;
 import com.app.payroll_service.repository.VacationRepository;
-import com.app.payroll_service.services.VacationService;
 
 class VacationServiceTest {
 
