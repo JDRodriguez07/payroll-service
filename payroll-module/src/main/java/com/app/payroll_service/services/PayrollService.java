@@ -5,6 +5,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,9 @@ public class PayrollService {
     @Autowired
     private DeductionRepository deductionRepository;
 
+    @Autowired
+    private com.app.payroll_service.client.ApiClient apiClient;
+
     /**
      * Retrieves all payroll records.
      */
@@ -63,9 +68,14 @@ public class PayrollService {
                 .orElseThrow(() -> new PayrollNotFoundException(id));
     }
 
-    public void generateMonthlyPayrolls() {
-        Array<EmployeeAndContract> employeesAndContracts = getAllEmployeesAndContracts();
-        system.out.println(employeesAndContracts);
+    public void generateMonthlyPayrolls(String token) {
+        List<EmployeeAndContract> employeesAndContracts = apiClient.allEmployeesAndContracts(token);
+        System.out.println(employeesAndContracts);
+
+        // Map contractId -> userId for easy access
+        Map<Long, Long> contractUserMap = employeesAndContracts.stream()
+                .collect(Collectors.toMap(EmployeeAndContract::getContractId, EmployeeAndContract::getEmployeeId));
+
         LocalDate today = LocalDate.now();
 
         if (!isLastBusinessDayOfMonth(today)) {
@@ -98,6 +108,11 @@ public class PayrollService {
 
         for (Contract contract : contracts) {
 
+            Long userId = contractUserMap.get(contract.getContractId());
+            if (userId == null) {
+                continue; // Skip contract with no associated user
+            }
+
             BigDecimal grossSalary = contract.getSalary();
             BigDecimal healthDeductionAmount = grossSalary.multiply(healthType.getPercentage());
             BigDecimal pensionDeductionAmount = grossSalary.multiply(pensionType.getPercentage());
@@ -105,7 +120,7 @@ public class PayrollService {
             BigDecimal netSalary = grossSalary.subtract(totalDeductions);
 
             Payroll payroll = new Payroll();
-            payroll.setUserId(1L); // Pending this part with userId
+            payroll.setUserId(userId);
             payroll.setPaidDays(30);
             payroll.setInitialPeriod(initialPeriod);
             payroll.setFinalPeriod(finalPeriod);
@@ -114,7 +129,7 @@ public class PayrollService {
 
             Payroll savedPayroll = payrollRepository.save(payroll);
 
-            // Guardar deducción de SALUD
+            // Save deduction of HEALTH
             Deduction healthDeduction = new Deduction(healthType, healthDeductionAmount);
             healthDeduction = deductionRepository.save(healthDeduction);
 
@@ -123,7 +138,7 @@ public class PayrollService {
             payrollHealthDeduction.setDeduction(healthDeduction);
             payrollDeductionsRepository.save(payrollHealthDeduction);
 
-            // Guardar deducción de PENSIÓN
+            // Safe deduction of PENSION
             Deduction pensionDeduction = new Deduction(pensionType, pensionDeductionAmount);
             pensionDeduction = deductionRepository.save(pensionDeduction);
 
@@ -133,23 +148,16 @@ public class PayrollService {
             payrollDeductionsRepository.save(payrollPensionDeduction);
         }
 
-        
     }
 
     public static boolean isLastBusinessDayOfMonth(LocalDate today) {
-        today = LocalDate.now();
-
-        // Get the last day of the month
         LocalDate lastDayOfMonth = today.with(TemporalAdjusters.lastDayOfMonth());
 
-        // Find the last business day (not Saturday or Sunday)
-        LocalDate lastBusinessDay = lastDayOfMonth;
-        while (lastBusinessDay.getDayOfWeek() == DayOfWeek.SATURDAY ||
-                lastBusinessDay.getDayOfWeek() == DayOfWeek.SUNDAY) {
-            lastBusinessDay = lastBusinessDay.minusDays(1);
+        if (lastDayOfMonth.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            lastDayOfMonth = lastDayOfMonth.minusDays(1);
         }
 
-        return today.equals(lastBusinessDay);
+        return today.equals(lastDayOfMonth);
     }
 
 }

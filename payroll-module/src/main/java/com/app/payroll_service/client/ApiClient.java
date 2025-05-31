@@ -1,5 +1,6 @@
 package com.app.payroll_service.client;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.app.payroll_service.services.HttpService;
 import com.app.payroll_service.config.UserManagementApiProperties;
+import com.app.payroll_service.dto.EmployeeAndContract;
 
 @Component
 public class ApiClient {
@@ -24,19 +26,19 @@ public class ApiClient {
         ResponseEntity<Boolean> response = httpService.get(
                 url,
                 Boolean.class,
-                Map.of("Authorization", authorization)
-        );
+                Map.of("Authorization", authorization));
 
         return response.getBody();
     }
 
-    public Object allEmployeesAndContracts(){
+    public List<EmployeeAndContract> allEmployeesAndContracts(String authorization) {
         String url = userManagementApiProperties.getBaseUrl() + "/employee/allEmployeesAndContracts";
 
-        ResponseEntity<Object> response = httpService.get(
+        ResponseEntity<EmployeeAndContract[]> response = httpService.get(
                 url,
-                Object.class,
-                Map.of("Authorization", authorization)
-        );
+                EmployeeAndContract[].class,
+                Map.of("Authorization", authorization));
+
+        return List.of(response.getBody());
     }
 }
