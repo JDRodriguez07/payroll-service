@@ -33,8 +33,10 @@ services:
     build:
       context: ./payroll-module
       dockerfile: Dockerfile
-    container_name: backend_payroll_service
+    container_name: backend-payroll-service
     restart: always
+    environment:
+      - TZ=America/Bogota
     ports:
       - 1123:8080
     depends_on:
