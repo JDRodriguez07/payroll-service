@@ -68,4 +68,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidVacationDatesException.class)
+    public ResponseEntity<String> handleInvalidVacationDates(InvalidVacationDatesException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidVacationDaysException.class)
+    public ResponseEntity<String> handleInvalidVacationDays(InvalidVacationDaysException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
 }
