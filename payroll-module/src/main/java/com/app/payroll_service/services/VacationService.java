@@ -153,25 +153,25 @@ public class VacationService {
         return vacationMapper.toResponseDTO(canceledVacation);
     }
 
-    @Scheduled(cron = "0 0 1 * * *") // Every day at 1:00 AM
-    public void autoActivateVacations() {
-        LocalDate today = LocalDate.now();
+    // @Scheduled(cron = "0 0 1 * * *") // Every day at 1:00 AM
+    // public void autoActivateVacations() {
+    //     LocalDate today = LocalDate.now();
 
-        if (!isBusinessDay(today)) {
-            return;
-        }
+    //     if (!isBusinessDay(today)) {
+    //         return;
+    //     }
 
-        // Activate vacations that were approved and should have already started
-        List<Vacation> vacationsToActivate = vacationRepository
-                .findByStatusAndStartDateLessThanEqual(
-                        VacationStatusEnum.APPROVED.getValue(), today);
+    //     // Activate vacations that were approved and should have already started
+    //     List<Vacation> vacationsToActivate = vacationRepository
+    //             .findByStatusAndStartDateLessThanEqual(
+    //                     VacationStatusEnum.APPROVED.getValue(), today);
 
-        for (Vacation vacation : vacationsToActivate) {
-            vacation.setStatus(VacationStatusEnum.ACTIVE.getValue());
-        }
+    //     for (Vacation vacation : vacationsToActivate) {
+    //         vacation.setStatus(VacationStatusEnum.ACTIVE.getValue());
+    //     }
 
-        vacationRepository.saveAll(vacationsToActivate);
-    }
+    //     vacationRepository.saveAll(vacationsToActivate);
+    // }
 
     /**
      * Scheduled task that automatically terminates approved vacations whose end
@@ -184,26 +184,26 @@ public class VacationService {
      * 
      * It updates the status of qualifying vacation records to {@code TERMINATED}.
      */
-    @Scheduled(cron = "59 23 * * *")
-    public void autoTerminateVacations() {
-        LocalDate today = LocalDate.now();
+    // @Scheduled(cron = "59 23 * * *")
+    // public void autoTerminateVacations() {
+    //     LocalDate today = LocalDate.now();
 
-        if (!isBusinessDay(today)) {
-            return;
-        }
+    //     if (!isBusinessDay(today)) {
+    //         return;
+    //     }
 
-        // Fetch vacations in APPROVED status that have ended
-        List<Vacation> vacationsToTerminate = vacationRepository
-                .findByStatusAndEndDateLessThanEqual(
-                        VacationStatusEnum.ACTIVE.getValue(), today);
+    //     // Fetch vacations in APPROVED status that have ended
+    //     List<Vacation> vacationsToTerminate = vacationRepository
+    //             .findByStatusAndEndDateLessThanEqual(
+    //                     VacationStatusEnum.ACTIVE.getValue(), today);
 
-        // Update their status to TERMINATED
-        for (Vacation vacation : vacationsToTerminate) {
-            vacation.setStatus(VacationStatusEnum.TERMINATED.getValue());
-        }
+    //     // Update their status to TERMINATED
+    //     for (Vacation vacation : vacationsToTerminate) {
+    //         vacation.setStatus(VacationStatusEnum.TERMINATED.getValue());
+    //     }
 
-        vacationRepository.saveAll(vacationsToTerminate);
-    }
+    //     vacationRepository.saveAll(vacationsToTerminate);
+    // }
 
     /**
      * Calculates the number of working days (Monday–Friday) between two dates.
