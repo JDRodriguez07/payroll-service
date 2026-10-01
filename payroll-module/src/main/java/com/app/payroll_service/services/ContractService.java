@@ -189,12 +189,11 @@ public class ContractService {
     /**
      * Automatically terminates contracts that have reached or passed their
      * termination date.
-     * Scheduled to run every day at 11:59 PM.
+     * Scheduled to run every day at 11:55 PM.
      */
-    //@Scheduled(fixedRate = 10000)
-    //@Scheduled(cron = "25 23 * * *")
+    @Scheduled(cron = "0 55 23 * * *")
     public void autoTerminateDueContracts() {
-        System.out.println("Running autoTerminateDueContracts... at 11:25 p.m");
+        
         LocalDate today = LocalDate.now();
 
         List<Contract> contractsToTerminate = contractRepository
@@ -215,7 +214,8 @@ public class ContractService {
      * @return number of daily working hours
      */
     private int calculateDailyHours(Schedule schedule) {
-        return (int) ChronoUnit.HOURS.between(schedule.getStartTime(), schedule.getEndTime());
+        long totalHours = ChronoUnit.HOURS.between(schedule.getStartTime(), schedule.getEndTime());
+        return (int) (totalHours - 2);
     }
 
 }
