@@ -167,6 +167,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(LicenseNotPendingApprovedStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleLicenseNotPendingApprovedStatus(
+            LicenseNotPendingApprovedStatusException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     /**
      * Handles validation errors for invalid method arguments.
      *

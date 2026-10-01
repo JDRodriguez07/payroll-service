@@ -44,13 +44,63 @@ public class LicenseController {
     }
 
     /**
-     * Retrieves all licenses currently in PENDING status.
+     * Retrieves all licenses with PENDING status.
      *
-     * @return a list of pending licenses as response DTOs
+     * @return list of pending licenses as response DTOs
      */
     @GetMapping("/pending")
     public ResponseEntity<List<LicenseResponseDTO>> getAllPendingLicenses() {
         return ResponseEntity.ok(licenseService.getAllPendingLicenses());
+    }
+
+    /**
+     * Retrieves all licenses with APPROVED status.
+     *
+     * @return list of approved licenses as response DTOs
+     */
+    @GetMapping("/approved")
+    public ResponseEntity<List<LicenseResponseDTO>> getAllApprovedLicenses() {
+        return ResponseEntity.ok(licenseService.getAllApprovedLicenses());
+    }
+
+    /**
+     * Retrieves all licenses with REJECTED status.
+     *
+     * @return list of rejected licenses as response DTOs
+     */
+    @GetMapping("/rejected")
+    public ResponseEntity<List<LicenseResponseDTO>> getAllRejectedLicenses() {
+        return ResponseEntity.ok(licenseService.getAllRejectedLicenses());
+    }
+
+    /**
+     * Retrieves all licenses with CANCELED status.
+     *
+     * @return list of canceled licenses as response DTOs
+     */
+    @GetMapping("/canceled")
+    public ResponseEntity<List<LicenseResponseDTO>> getAllCanceledLicenses() {
+        return ResponseEntity.ok(licenseService.getAllCanceledLicenses());
+    }
+
+    /**
+     * Retrieves all licenses with TERMINATED status.
+     *
+     * @return list of terminated licenses as response DTOs
+     */
+    @GetMapping("/terminated")
+    public ResponseEntity<List<LicenseResponseDTO>> getAllTerminatedLicenses() {
+        return ResponseEntity.ok(licenseService.getAllTerminatedLicenses());
+    }
+
+    /**
+     * Retrieves all licenses with ACTIVE status.
+     *
+     * @return list of active licenses as response DTOs
+     */
+    @GetMapping("/active")
+    public ResponseEntity<List<LicenseResponseDTO>> getAllActiveLicenses() {
+        return ResponseEntity.ok(licenseService.getAllActiveLicenses());
     }
 
     /**
