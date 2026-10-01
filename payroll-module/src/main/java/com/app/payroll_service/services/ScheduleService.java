@@ -1,13 +1,15 @@
 package com.app.payroll_service.services;
 
-import java.util.List;
+import com.app.payroll_service.dto.ScheduleResponseDTO;
+import com.app.payroll_service.exceptions.ScheduleNotFoundException;
+import com.app.payroll_service.mapper.ScheduleMapper;
+import com.app.payroll_service.models.Schedule;
+import com.app.payroll_service.repository.ScheduleRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.app.payroll_service.exceptions.ScheduleNotFoundException;
-import com.app.payroll_service.models.Schedule;
-import com.app.payroll_service.repository.ScheduleRepository;
+import java.util.List;
 
 @Service
 public class ScheduleService {
@@ -15,33 +17,17 @@ public class ScheduleService {
     @Autowired
     private ScheduleRepository scheduleRepository;
 
-    public List<Schedule> getAllSchedules() {
-        return scheduleRepository.findAll();
+    @Autowired
+    private ScheduleMapper scheduleMapper;
+
+    public List<ScheduleResponseDTO> getAllSchedules() {
+        List<Schedule> schedules = scheduleRepository.findAll();
+        return scheduleMapper.toResponseDTOList(schedules);
     }
 
-    public Schedule getScheduleById(Long id) {
-        return scheduleRepository.findById(id)
+    public ScheduleResponseDTO getScheduleById(Long id) {
+        Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new ScheduleNotFoundException(id));
-    }
-
-    public Schedule createSchedule(Schedule schedule) {
-        return scheduleRepository.save(schedule);
-    }
-
-    public void deleteSchedule(Long id) {
-        if (!scheduleRepository.existsById(id)) {
-            throw new ScheduleNotFoundException(id);
-        }
-        scheduleRepository.deleteById(id);
-    }
-
-    public Schedule updateSchedule(Long id, Schedule updated) {
-        Schedule existing = scheduleRepository.findById(id)
-                .orElseThrow(() -> new ScheduleNotFoundException(id));
-
-        existing.setStartTime(updated.getStartTime());
-        existing.setEndTime(updated.getEndTime());
-
-        return scheduleRepository.save(existing);
+        return scheduleMapper.toResponseDTO(schedule);
     }
 }
