@@ -6,7 +6,7 @@ package com.app.payroll_service.exceptions;
 public class InvalidVacationDaysException extends RuntimeException {
 
     public InvalidVacationDaysException() {
-        super("Taken days must be greater than 0.");
+        super("Taken days must be 15");
     }
 
     public InvalidVacationDaysException(String message) {

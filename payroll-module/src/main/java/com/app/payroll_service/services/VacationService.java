@@ -7,88 +7,117 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.app.payroll_service.dto.VacationDTO;
+import com.app.payroll_service.dto.RequestVacationDTO;
+import com.app.payroll_service.dto.VacationResponseDTO;
+import com.app.payroll_service.enums.VacationStatusEnum;
 import com.app.payroll_service.exceptions.InvalidVacationDatesException;
 import com.app.payroll_service.exceptions.InvalidVacationDaysException;
 import com.app.payroll_service.exceptions.VacationNotFoundException;
+import com.app.payroll_service.exceptions.VacationStatusNotPendingApprovedException;
+import com.app.payroll_service.mapper.VacationMapper;
 import com.app.payroll_service.models.Vacation;
 import com.app.payroll_service.repository.VacationRepository;
 
 @Service
 public class VacationService {
 
-    private static final String STATUS_PENDING = "PENDIENTE";
-    private static final String STATUS_APPROVED = "APROBADA";
-    private static final String STATUS_REJECTED = "RECHAZADA";
-
-    private static final int DEFAULT_VACATION_DAYS = 15;
-
     @Autowired
     private VacationRepository vacationRepository;
 
-    /**
-     * Retrieves all vacations from the database.
-     *
-     * @return List of vacations
-     */
-    public List<Vacation> getAllVacations() {
-        return vacationRepository.findAll();
+    @Autowired
+    private VacationMapper vacationMapper;
+
+    public static final int VACATION_DAYS = 15;
+
+    public List<VacationResponseDTO> getAllVacations() {
+        List<Vacation> vacations = vacationRepository.findAll();
+        return vacationMapper.toResponseDTOList(vacations);
     }
 
-    /**
-     * Retrieves a specific vacation by ID.
-     *
-     * @param id Vacation ID
-     * @return Vacation
-     * @throws VacationNotFoundException if not found
-     */
-    public Vacation getVacationById(Long id) {
-        return vacationRepository.findById(id)
+    public VacationResponseDTO getVacationById(Long id) {
+        Vacation vacation = vacationRepository.findById(id)
                 .orElseThrow(() -> new VacationNotFoundException(id));
+        return vacationMapper.toResponseDTO(vacation);
     }
 
-    /**
-     * Creates a vacation manually, validating dates and taken days.
-     *
-     * @param vacation Vacation to create
-     * @return Created vacation
-     */
-    public VacationDTO createVacation(Vacation vacation) {
-        if (vacation.getStartDate().isAfter(vacation.getEndDate())) {
+    public VacationResponseDTO requestVacation(RequestVacationDTO dto) {
+
+        if (dto.getEndDate().isBefore(dto.getStartDate())) {
             throw new InvalidVacationDatesException();
         }
 
-        if (vacation.getTakenDays() <= 0) {
+        int days = calculateWorkingDays(dto.getStartDate(), dto.getEndDate());
+
+        if (days != VACATION_DAYS) {
             throw new InvalidVacationDaysException();
         }
-        vacationRepository.save(vacation);
-        return new VacationDTO(vacation.getVacationId(),vacation.getUserId(), vacation.getStartDate(), vacation.getEndDate(), vacation.getTakenDays(), vacation.getStatus());
+
+        Vacation vacation = vacationMapper.toEntity(dto);
+
+        // Note: User ID is assumed to be valid.
+        // Validation is expected to be handled by the User microservice.
+        vacation.setUserId(dto.getUserId());
+
+        vacation.setTakenDays(days);
+        vacation.setStatus(VacationStatusEnum.PENDING.getValue());
+
+        Vacation savedVacation = vacationRepository.save(vacation);
+        return vacationMapper.toResponseDTO(savedVacation);
     }
 
-    /**
-     * Allows a user to request vacation using only a start date.
-     * The system assigns 15 business days automatically and sets status to
-     * "PENDING".
-     *
-     * @param vacation Vacation request (only userId and startDate required)
-     * @return Created vacation
-     */
-    public Vacation requestVacation(Vacation vacation) {
-        if (vacation.getUserId() == null) {
-            throw new IllegalArgumentException("User ID is required.");
+    public VacationResponseDTO approveVacation(Long vacationId) {
+        Vacation vacation = vacationRepository.findById(vacationId)
+                .orElseThrow(() -> new VacationNotFoundException(vacationId));
+
+        if (!VacationStatusEnum.PENDING.getValue().equals(vacation.getStatus())) {
+            throw new VacationStatusNotPendingApprovedException(vacationId);
         }
 
-        if (vacation.getStartDate() == null) {
-            throw new InvalidVacationDatesException("Start date is required.");
+        vacation.setStatus(VacationStatusEnum.APPROVED.getValue());
+
+        Vacation savedVacation = vacationRepository.save(vacation);
+        return vacationMapper.toResponseDTO(savedVacation);
+    }
+
+    public VacationResponseDTO rejectVacation(Long vacationId) {
+        Vacation vacation = vacationRepository.findById(vacationId)
+                .orElseThrow(() -> new VacationNotFoundException(vacationId));
+
+        if (!VacationStatusEnum.PENDING.getValue().equals(vacation.getStatus())) {
+            throw new VacationStatusNotPendingApprovedException(vacationId);
         }
 
-        LocalDate endDate = calculateEndDateSkippingWeekends(vacation.getStartDate(), DEFAULT_VACATION_DAYS);
+        vacation.setStatus(VacationStatusEnum.REJECTED.getValue());
 
-        vacation.setEndDate(endDate);
-        vacation.setTakenDays(DEFAULT_VACATION_DAYS);
-        vacation.setStatus(STATUS_PENDING);
+        Vacation savedVacation = vacationRepository.save(vacation);
+        return vacationMapper.toResponseDTO(savedVacation);
+    }
 
-        return vacationRepository.save(vacation);
+    public VacationResponseDTO cancelVacation(Long vacationId) {
+        Vacation vacation = vacationRepository.findById(vacationId)
+                .orElseThrow(() -> new VacationNotFoundException(vacationId));
+
+        if (!(VacationStatusEnum.APPROVED.getValue().equals(vacation.getStatus())
+                || VacationStatusEnum.PENDING.getValue().equals(vacation.getStatus()))) {
+            throw new VacationStatusNotPendingApprovedException(vacationId);
+        }
+
+        vacation.setStatus(VacationStatusEnum.CANCELED.getValue());
+
+        Vacation canceledVacation = vacationRepository.save(vacation);
+        return vacationMapper.toResponseDTO(canceledVacation);
+    }
+
+    private int calculateWorkingDays(LocalDate start, LocalDate end) {
+        int workDays = 0;
+        LocalDate date = start;
+        while (!date.isAfter(end)) {
+            if (!(date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY)) {
+                workDays++;
+            }
+            date = date.plusDays(1);
+        }
+        return workDays;
     }
 
     /**
@@ -99,7 +128,7 @@ public class VacationService {
      * @param businessDays Number of business days to calculate
      * @return Calculated end date
      */
-    private LocalDate calculateEndDateSkippingWeekends(LocalDate startDate, int businessDays) {
+    /*private LocalDate calculateEndDateSkippingWeekends(LocalDate startDate, int businessDays) {
         LocalDate result = startDate;
         int addedDays = 0;
 
@@ -112,92 +141,5 @@ public class VacationService {
         }
 
         return result;
-    }
-
-    /**
-     * Approves a vacation by setting its status to "APROBADA".
-     *
-     * @param id Vacation ID
-     * @return Updated vacation
-     */
-    public Vacation approveVacation(Long id) {
-        Vacation vacation = vacationRepository.findById(id)
-                .orElseThrow(() -> new VacationNotFoundException(id));
-
-        if (!STATUS_PENDING.equalsIgnoreCase(vacation.getStatus())) {
-            throw new IllegalStateException("Only vacations with status 'PENDIENTE' can be approved.");
-        }
-
-        vacation.setStatus(STATUS_APPROVED);
-        return vacationRepository.save(vacation);
-    }
-
-    /**
-     * Rejects a vacation by setting its status to "RECHAZADA".
-     *
-     * @param id Vacation ID
-     * @return Updated vacation
-     */
-    public Vacation rejectVacation(Long id) {
-        Vacation vacation = vacationRepository.findById(id)
-                .orElseThrow(() -> new VacationNotFoundException(id));
-
-        if (!STATUS_PENDING.equalsIgnoreCase(vacation.getStatus())) {
-            throw new IllegalStateException("Only vacations with status 'PENDIENTE' can be rejected.");
-        }
-
-        vacation.setStatus(STATUS_REJECTED);
-        return vacationRepository.save(vacation);
-    }
-
-    /**
-     * Updates an existing vacation with new data.
-     *
-     * @param id      Vacation ID
-     * @param updated Updated vacation
-     * @return Updated vacation
-     */
-    public Vacation updateVacation(Long id, Vacation updated) {
-        Vacation existing = vacationRepository.findById(id)
-                .orElseThrow(() -> new VacationNotFoundException(id));
-
-        if (updated.getStartDate().isAfter(updated.getEndDate())) {
-            throw new InvalidVacationDatesException();
-        }
-
-        if (updated.getTakenDays() <= 0) {
-            throw new InvalidVacationDaysException();
-        }
-
-        existing.setUserId(updated.getUserId());
-        existing.setStartDate(updated.getStartDate());
-        existing.setEndDate(updated.getEndDate());
-        existing.setTakenDays(updated.getTakenDays());
-        existing.setStatus(updated.getStatus());
-
-        return vacationRepository.save(existing);
-    }
-
-    /**
-     * Deletes a vacation by ID.
-     *
-     * @param id Vacation ID
-     * @throws VacationNotFoundException if not found
-     */
-    public void deleteVacation(Long id) {
-        if (!vacationRepository.existsById(id)) {
-            throw new VacationNotFoundException(id);
-        }
-        vacationRepository.deleteById(id);
-    }
-
-    /**
-     * Retrieves all vacation requests with status "PENDIENTE".
-     *
-     * @return List of pending vacations
-     */
-    public List<Vacation> getAllPendingVacations() {
-        return vacationRepository.findByStatusIgnoreCase(STATUS_PENDING);
-    }
-
+    }*/
 }
