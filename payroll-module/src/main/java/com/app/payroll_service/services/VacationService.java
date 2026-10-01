@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.app.payroll_service.dto.VacationDTO;
 import com.app.payroll_service.exceptions.InvalidVacationDatesException;
 import com.app.payroll_service.exceptions.InvalidVacationDaysException;
 import com.app.payroll_service.exceptions.VacationNotFoundException;
@@ -52,7 +53,7 @@ public class VacationService {
      * @param vacation Vacation to create
      * @return Created vacation
      */
-    public Vacation createVacation(Vacation vacation) {
+    public VacationDTO createVacation(Vacation vacation) {
         if (vacation.getStartDate().isAfter(vacation.getEndDate())) {
             throw new InvalidVacationDatesException();
         }
@@ -60,8 +61,8 @@ public class VacationService {
         if (vacation.getTakenDays() <= 0) {
             throw new InvalidVacationDaysException();
         }
-
-        return vacationRepository.save(vacation);
+        vacationRepository.save(vacation);
+        return new VacationDTO(vacation.getVacationId(),vacation.getUserId(), vacation.getStartDate(), vacation.getEndDate(), vacation.getTakenDays(), vacation.getStatus());
     }
 
     /**

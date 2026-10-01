@@ -1,8 +1,9 @@
 package com.app.payroll_service.models;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.*;
@@ -39,14 +40,14 @@ public class Contract {
      * Date when the contract started.
      */
     @Column(name = "hire_date", nullable = false)
-    private Date hireDate;
+    private LocalDate hireDate;
 
     /**
      * Date when the contract ended (nullable for ongoing contracts).
      */
     @Column(name = "termination_date")
     @Temporal(TemporalType.DATE)
-    private Date terminationDate;
+    private LocalDate terminationDate;
 
     /**
      * Number of working hours per day defined in the contract.

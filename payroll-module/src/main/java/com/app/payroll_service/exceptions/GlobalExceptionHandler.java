@@ -93,4 +93,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidContractSalaryException.class)
+    public ResponseEntity<String> handleInvalidSalary(InvalidContractSalaryException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MissingHireDateException.class)
+    public ResponseEntity<String> handleMissingHireDate(MissingHireDateException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
 }
