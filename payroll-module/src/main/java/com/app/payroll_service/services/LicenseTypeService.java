@@ -1,13 +1,14 @@
 package com.app.payroll_service.services;
 
-import java.util.List;
-
+import com.app.payroll_service.dto.LicenseTypeResponseDTO;
+import com.app.payroll_service.exceptions.LicenseTypeNotFoundException;
+import com.app.payroll_service.mapper.LicenseTypeMapper;
+import com.app.payroll_service.models.LicenseType;
+import com.app.payroll_service.repository.LicenseTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.app.payroll_service.exceptions.LicenseTypeNotFoundException;
-import com.app.payroll_service.models.LicenseType;
-import com.app.payroll_service.repository.LicenseTypeRepository;
+import java.util.List;
 
 @Service
 public class LicenseTypeService {
@@ -15,33 +16,17 @@ public class LicenseTypeService {
     @Autowired
     private LicenseTypeRepository licenseTypeRepository;
 
-    public List<LicenseType> getAllLicenseTypes() {
-        return licenseTypeRepository.findAll();
+    @Autowired
+    private LicenseTypeMapper licenseTypeMapper;
+
+    public List<LicenseTypeResponseDTO> getAllLicenseTypes() {
+        List<LicenseType> licenseTypes = licenseTypeRepository.findAll();
+        return licenseTypeMapper.toResponseDTOList(licenseTypes);
     }
 
-    public LicenseType getLicenseTypeById(Long id) {
-        return licenseTypeRepository.findById(id)
+    public LicenseTypeResponseDTO getLicenseTypeById(Long id) {
+        LicenseType licenseType = licenseTypeRepository.findById(id)
                 .orElseThrow(() -> new LicenseTypeNotFoundException(id));
-    }
-
-    public LicenseType createLicenseType(LicenseType licenseType) {
-        return licenseTypeRepository.save(licenseType);
-    }
-
-    public void deleteLicenseType(Long id) {
-        if (!licenseTypeRepository.existsById(id)) {
-            throw new LicenseTypeNotFoundException(id);
-        }
-        licenseTypeRepository.deleteById(id);
-    }
-
-    public LicenseType updateLicenseType(Long id, LicenseType updated) {
-        LicenseType existing = licenseTypeRepository.findById(id)
-                .orElseThrow(() -> new LicenseTypeNotFoundException(id));
-
-        existing.setDescription(updated.getDescription());
-        existing.setDiscount(updated.isDiscount());
-
-        return licenseTypeRepository.save(existing);
+        return licenseTypeMapper.toResponseDTO(licenseType);
     }
 }
