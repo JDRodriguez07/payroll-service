@@ -122,6 +122,16 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(ContractAlreadyTerminatedException.class)
+    public ResponseEntity<Map<String, Object>> handleContractAlreadyTerminated(ContractAlreadyTerminatedException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(ContractAlreadyFinalizedException.class)
+    public ResponseEntity<Map<String, Object>> handleContractAlreadyFinalized(ContractAlreadyFinalizedException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, Object> body = new HashMap<>();
