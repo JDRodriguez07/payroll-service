@@ -1,7 +1,7 @@
 package com.app.payroll_service.models;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.util.Date;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -45,6 +45,7 @@ public class Contract {
      * Date when the contract ended (nullable for ongoing contracts).
      */
     @Column(name = "termination_date")
+    @Temporal(TemporalType.DATE)
     private Date terminationDate;
 
     /**
@@ -58,6 +59,12 @@ public class Contract {
      */
     @Column(name = "salary", nullable = false, precision = 10, scale = 2)
     private BigDecimal salary;
+
+    /**
+     * Status of the contract (active or inactive).
+     */
+    @Column(name = "status", nullable = false)
+    private String status;
 
     /**
      * Timestamp when the contract record was created.
