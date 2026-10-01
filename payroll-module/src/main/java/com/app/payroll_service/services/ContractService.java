@@ -10,6 +10,7 @@ import com.app.payroll_service.dto.UpdateContractDTO;
 import com.app.payroll_service.enums.ContractStatusEnum;
 import com.app.payroll_service.exceptions.ContractNotFoundException;
 import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
+import com.app.payroll_service.exceptions.InvalidTerminationDateException;
 import com.app.payroll_service.exceptions.MissingTerminationDateException;
 import com.app.payroll_service.exceptions.ScheduleNotFoundException;
 import com.app.payroll_service.mapper.ContractMapper;
@@ -66,7 +67,7 @@ public class ContractService {
         }
 
         if (dto.getTerminationDate() != null && dto.getTerminationDate().isBefore(dto.getHireDate())) {
-            throw new IllegalArgumentException("Termination date cannot be before hire date.");
+            throw new InvalidTerminationDateException();
         }
 
         Contract contract = contractMapper.toEntityContract(dto);
