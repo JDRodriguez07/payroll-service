@@ -83,7 +83,6 @@ public class PayrollService {
                     return deductionTypeRepository.save(created);
                 });
 
-        // Find or create the PENSION deduction type
         DeductionType pensionType = deductionTypeRepository.findByNameIgnoreCase("Pension")
                 .orElseGet(() -> {
                     BigDecimal defaultPercentage = BigDecimal.valueOf(0.04);
