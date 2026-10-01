@@ -80,4 +80,9 @@ public class GlobalExceptionHandler {
                 .body(ex.getMessage());
     }
 
+    @ExceptionHandler(DuplicateDeductionTypeNameException.class)
+    public ResponseEntity<String> handleDuplicateDeductionType(DuplicateDeductionTypeNameException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 }
