@@ -58,4 +58,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidLicenseDatesException.class)
+    public ResponseEntity<String> handleInvalidLicenseDates(InvalidLicenseDatesException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidLicenseDaysException.class)
+    public ResponseEntity<String> handleInvalidLicenseDays(InvalidLicenseDaysException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 }
