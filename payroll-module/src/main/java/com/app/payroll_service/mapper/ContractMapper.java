@@ -11,12 +11,11 @@ import com.app.payroll_service.models.Contract;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ContractMapper {
 
-    // Mapea DTO de entrada a entidad
     Contract toEntityContract(CreateContractDTO contractDTO);
 
-    // Mapea entidad a DTO de respuesta, con campos personalizados
     @Mapping(source = "contractType.name", target = "contractTypeName")
     @Mapping(source = "schedule.startTime", target = "startTime")
     @Mapping(source = "schedule.endTime", target = "endTime")
+    @Mapping(source = "dailyHours", target = "dailyHours")
     ContractResponseDTO toResponseDTO(Contract contract);
 }

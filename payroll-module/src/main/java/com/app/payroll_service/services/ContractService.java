@@ -93,35 +93,51 @@ public class ContractService {
         Contract existingContract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
 
+        // Validar y actualizar el horario
         if (dto.getScheduleId() != null) {
             Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
                     .orElseThrow(() -> new ScheduleNotFoundException(dto.getScheduleId()));
             existingContract.setSchedule(schedule);
-
             int dailyHours = calculateDailyHours(schedule);
             existingContract.setDailyHours(dailyHours);
-
         }
 
+        // Validar y actualizar la fecha de contratación
         if (dto.getHireDate() != null) {
             existingContract.setHireDate(dto.getHireDate());
         }
 
+        boolean requiresEndDate = existingContract.getContractType().isRequiresEndDate();
+        Long contractTypeId = existingContract.getContractType().getContractTypeId();
+
+        // Validación: se requiere terminationDate y no se pasó
+        if (requiresEndDate && dto.getTerminationDate() == null) {
+            throw new MissingTerminationDateException(contractTypeId);
+        }
+
+        // Validación: no se permite terminationDate para ciertos tipos
+        if (!requiresEndDate && dto.getTerminationDate() != null && contractTypeId == 1L) {
+            throw new TerminationDateNotAllowedException(contractTypeId);
+        }
+
+        // Validación: coherencia de fechas
+        if (dto.getTerminationDate() != null && existingContract.getHireDate() != null &&
+                dto.getTerminationDate().isBefore(existingContract.getHireDate())) {
+            throw new InvalidTerminationDateException();
+        }
+
+        // Actualizar terminationDate
         if (dto.getTerminationDate() != null) {
-            if (existingContract.getHireDate() != null
-                    && dto.getTerminationDate().isBefore(existingContract.getHireDate())) {
-                throw new IllegalArgumentException("Termination date cannot be before hire date.");
-            }
             existingContract.setTerminationDate(dto.getTerminationDate());
         }
 
+        // Actualizar salario
         if (dto.getSalary() != null) {
             existingContract.setSalary(dto.getSalary());
         }
 
         Contract updated = contractRepository.save(existingContract);
         return contractMapper.toResponseDTO(updated);
-
     }
 
     public ContractResponseDTO terminateContract(Long contractId) {
