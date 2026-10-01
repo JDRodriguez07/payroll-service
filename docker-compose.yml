@@ -1,34 +1,37 @@
-
 services:
   payroll_db:
-    build: 
+    build:
       context: ./MySQL
       dockerfile: Dockerfile
     container_name: mysql_payroll_service
     restart: always
     ports:
-      - 1121:3306
+      - "${PAYROLL_DB_HOST_PORT:-1121}:3306"
     volumes:
       - ./Config/mysql:/var/lib/mysql
-    hostname: apps_database
+    hostname: payroll_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${DB_NAME:-db_payroll_service}
+      MYSQL_USER: ${DB_USERNAME:-payroll_service_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     networks:
       - red_microservicios
     healthcheck:
-        test: ["CMD","mysql", "-u", "root", "-pREDACTED"]
-        interval: 30s
-        timeout: 10s
-        retries: 5
-# --------------------------------------------------------------------
-  # - The adminer is a tool for managing content in databases.
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   adminer:
     image: adminer
     container_name: adminer_payroll_service
     restart: always
     ports:
-      - 1122:8080
+      - "${ADMINER_HOST_PORT:-1122}:8080"
     networks:
       - red_microservicios
-# --------------------------------------------------------------------
+
   payroll_service:
     build:
       context: ./payroll-module
@@ -36,14 +39,21 @@ services:
     container_name: backend-payroll-service
     restart: always
     environment:
-      - TZ=America/Bogota
+      TZ: ${TZ:-America/Bogota}
+      DB_HOST: payroll_db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-db_payroll_service}
+      DB_USERNAME: ${DB_USERNAME:-payroll_service_user}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      USER_MANAGEMENT_BASE_URL: ${USER_MANAGEMENT_BASE_URL:-http://backend-usermanagment:8080}
     ports:
-      - 1123:8080
+      - "${PAYROLL_API_HOST_PORT:-1123}:8080"
     depends_on:
-       payroll_db:
-         condition: service_healthy
+      payroll_db:
+        condition: service_healthy
     networks:
       - red_microservicios
+
 networks:
   red_microservicios:
     external: true
