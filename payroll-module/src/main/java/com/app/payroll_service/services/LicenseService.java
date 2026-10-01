@@ -5,13 +5,14 @@ import java.time.DayOfWeek;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.app.payroll_service.dto.LicenseResponseDTO;
 import com.app.payroll_service.dto.RequestLicenseDTO;
 import com.app.payroll_service.enums.LicenseStatusEnum;
 import com.app.payroll_service.exceptions.InvalidLicenseDatesException;
-import com.app.payroll_service.exceptions.InvalidLicenseDaysException;
+import com.app.payroll_service.exceptions.LicenseCanceledOrTerminatedException;
 import com.app.payroll_service.exceptions.LicenseStatusNotPendingException;
 import com.app.payroll_service.exceptions.LicenseNotFoundException;
 import com.app.payroll_service.exceptions.LicenseTypeNotFoundException;
@@ -85,6 +86,37 @@ public class LicenseService {
 
         License rejectedLicense = licenseRepository.save(license);
         return licenseMapper.toResponseDTO(rejectedLicense);
+    }
+
+    public LicenseResponseDTO cancelLicense(Long licenseId) {
+        License license = licenseRepository.findById(licenseId)
+                .orElseThrow(() -> new LicenseNotFoundException(licenseId));
+
+        if (LicenseStatusEnum.CANCELED.getValue().equals(license.getStatus())
+                || LicenseStatusEnum.TERMINATED.getValue().equals(license.getStatus())) {
+            throw new LicenseCanceledOrTerminatedException(licenseId);
+        }
+
+        license.setStatus(LicenseStatusEnum.CANCELED.getValue());
+
+        License cancelledLicense = licenseRepository.save(license);
+        return licenseMapper.toResponseDTO(cancelledLicense);
+    }
+
+    @Scheduled(cron = "59 23 * * *")
+    public void autoTerminateLicense() {
+        LocalDate today = LocalDate.now();
+
+        List<License> licensesToTerminate = licenseRepository.findByStatusAndEndDateBeforeOrEndDateEquals(
+                LicenseStatusEnum.APPROVED.getValue(),
+                today, today);
+
+        for (License license : licensesToTerminate) {
+            license.setStatus(LicenseStatusEnum.TERMINATED.getValue());
+        }
+
+        licenseRepository.saveAll(licensesToTerminate);
+
     }
 
     private int calculateWorkingDays(LocalDate start, LocalDate end) {
