@@ -10,6 +10,7 @@ import com.app.payroll_service.dto.UpdateContractDTO;
 import com.app.payroll_service.enums.ContractStatusEnum;
 import com.app.payroll_service.exceptions.ContractNotFoundException;
 import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
+import com.app.payroll_service.exceptions.MissingTerminationDateException;
 import com.app.payroll_service.exceptions.ScheduleNotFoundException;
 import com.app.payroll_service.mapper.ContractMapper;
 
@@ -58,6 +59,11 @@ public class ContractService {
 
         ContractType contractType = contractTypeRepository.findById(dto.getContractTypeId())
                 .orElseThrow(() -> new ContractTypeNotFoundException(dto.getContractTypeId()));
+
+        // Validar si se requiere terminationDate
+        if (contractType.isRequiresEndDate() && dto.getTerminationDate() == null) {
+            throw new MissingTerminationDateException(dto.getContractTypeId());
+        }
 
         if (dto.getTerminationDate() != null && dto.getTerminationDate().isBefore(dto.getHireDate())) {
             throw new IllegalArgumentException("Termination date cannot be before hire date.");
