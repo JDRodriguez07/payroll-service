@@ -17,6 +17,7 @@ import com.app.payroll_service.exceptions.TerminationDateNotAllowedException;
 import com.app.payroll_service.mapper.ContractMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.app.payroll_service.models.Contract;
@@ -140,6 +141,7 @@ public class ContractService {
         return contractMapper.toResponseDTO(updated);
     }
 
+    //Pending
     public ContractResponseDTO terminateContract(Long contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ContractNotFoundException(contractId));
@@ -149,6 +151,26 @@ public class ContractService {
 
         Contract updated = contractRepository.save(contract);
         return contractMapper.toResponseDTO(updated);
+    }
+
+    /**
+     * This scheduled method automatically terminates contracts
+     * that have reached or passed their termination date.
+     * It runs every day at 11:59 PM.
+     */
+    @Scheduled(cron = "59 23 * * *")
+    public void autoTerminateDueContracts() {
+        LocalDate today = LocalDate.now();
+
+        List<Contract> contractsToTerminate = contractRepository
+                .findByStatusAndTerminationDateBeforeOrTerminationDateEquals(
+                        ContractStatusEnum.ACTIVE.getValue(), today, today);
+
+        for (Contract contract : contractsToTerminate) {
+            contract.setStatus(ContractStatusEnum.TERMINATED.getValue());
+        }
+
+        contractRepository.saveAll(contractsToTerminate);
     }
 
     private int calculateDailyHours(Schedule schedule) {
