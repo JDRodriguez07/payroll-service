@@ -41,10 +41,10 @@ class PayrollControllerTest {
     void setUp() {
         payroll = new Payroll();
         payroll.setPayrollId(1L);
-      
+
         payrollDTO = new PayrollResponseDTO();
         payrollDTO.setPayrollId(1L);
-        payrollDTO.setNetSalary(new BigDecimal(2000.00)); 
+        payrollDTO.setNetSalary(new BigDecimal(2000.00));
     }
 
     @Test
@@ -72,10 +72,14 @@ class PayrollControllerTest {
 
     @Test
     void generateMonthlyPayrolls_shouldReturnSuccessMessage() throws Exception {
-        doNothing().when(payrollService).generateMonthlyPayrolls();
+        String fakeToken = "Bearer fake-token";
 
-        mockMvc.perform(post("/api/payrolls/generate"))
+        doNothing().when(payrollService).generateMonthlyPayrolls(fakeToken);
+
+        mockMvc.perform(post("/api/payrolls/generate")
+                .header("Authorization", fakeToken))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Monthly payrolls generated successfully."));
     }
+
 }

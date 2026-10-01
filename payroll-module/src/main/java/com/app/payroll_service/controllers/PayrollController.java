@@ -43,8 +43,9 @@ public class PayrollController {
      * Generate payrolls for the current month.
      */
     @PostMapping("/generate")
-    public ResponseEntity<String> generateMonthlyPayrolls() {
-        payrollService.generateMonthlyPayrolls();
+    public ResponseEntity<String> generateMonthlyPayrolls(@RequestHeader("Authorization") String token) {
+        payrollService.generateMonthlyPayrolls(token);
         return ResponseEntity.ok("Monthly payrolls generated successfully.");
     }
+
 }

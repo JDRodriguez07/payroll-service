@@ -3,9 +3,9 @@ package com.app.payroll_service.dto;
 import lombok.Data;
 
 @Data
-class public EmployeeAndContract {
+public class EmployeeAndContract {
+    
     private Long employeeId;
     private Long contractId;
-
 
 }
