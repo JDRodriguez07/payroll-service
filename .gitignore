@@ -6,6 +6,8 @@ Config/mysql/
 # Environment variables
 .env
 .env.local
+.env.*
+!.env.example
 
 # Dependencies
 node_modules/

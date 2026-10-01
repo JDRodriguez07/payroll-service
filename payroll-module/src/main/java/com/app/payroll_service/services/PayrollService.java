@@ -70,7 +70,6 @@ public class PayrollService {
 
     public void generateMonthlyPayrolls(String token) {
         List<EmployeeAndContract> employeesAndContracts = apiClient.allEmployeesAndContracts(token);
-        System.out.println(employeesAndContracts);
 
         // Map contractId -> userId for easy access
         Map<Long, Long> contractUserMap = employeesAndContracts.stream()
