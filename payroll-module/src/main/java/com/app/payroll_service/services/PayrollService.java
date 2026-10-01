@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.app.payroll_service.exceptions.PayrollNotFoundException;
 import com.app.payroll_service.models.Payroll;
+import com.app.payroll_service.models.PayrollDeductions;
 import com.app.payroll_service.repository.PayrollRepository;
 
 @Service
@@ -14,6 +15,9 @@ public class PayrollService {
 
     @Autowired
     private PayrollRepository payrollRepository;
+
+    @Autowired
+    private PayrollDeductionsService payrollDeductionsService;
 
     public List<Payroll> getAllPayrolls() {
         return payrollRepository.findAll();
@@ -25,7 +29,14 @@ public class PayrollService {
     }
 
     public Payroll createPayroll(Payroll payroll) {
-        return payrollRepository.save(payroll);
+        // Guardar nómina
+        Payroll savedPayroll = payrollRepository.save(payroll);
+
+        // Generar y asociar deducciones
+        List<PayrollDeductions> deductions = payrollDeductionsService.generateDeductionsForPayroll(savedPayroll);
+        savedPayroll.setPayrollDeductions(deductions);
+
+        return savedPayroll;
     }
 
     public Payroll updatePayroll(Long id, Payroll updated) {
@@ -43,9 +54,10 @@ public class PayrollService {
     }
 
     public void deletePayroll(Long id) {
-        if (!payrollRepository.existsById(id)) {
-            throw new PayrollNotFoundException(id);
-        }
-        payrollRepository.deleteById(id);
+        Payroll payroll = payrollRepository.findById(id)
+                .orElseThrow(() -> new PayrollNotFoundException(id));
+
+        payrollDeductionsService.deleteDeductionsByPayroll(payroll);
+        payrollRepository.delete(payroll);
     }
 }
