@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,13 +24,14 @@ public class Deduction {
 
     @ManyToOne
     @JoinColumn(name = "deduction_type_id", nullable = false)
-    private DeductionType deductionTypeId;
+    private DeductionType deductionType;
 
     @Column(name = "amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;
 
     // Relationship with payroll_deductions
     @OneToMany(mappedBy = "deduction", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<PayrollDeductions> payrollDeductions;
 
     @CreationTimestamp
