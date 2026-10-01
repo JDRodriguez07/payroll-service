@@ -41,7 +41,7 @@ public class PayrollDeductionsService {
      * @param payroll Payroll to which the deductions will be applied
      * @return List of generated PayrollDeductions
      */
-    public List<PayrollDeductions> generateDeductionsForPayroll(Payroll payroll) {
+    /*public List<PayrollDeductions> generateDeductionsForPayroll(Payroll payroll) {
         List<PayrollDeductions> generatedDeductions = new ArrayList<>();
 
         // Fetch the contract using the userId from the payroll

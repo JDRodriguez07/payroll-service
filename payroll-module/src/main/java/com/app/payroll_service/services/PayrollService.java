@@ -51,7 +51,7 @@ public class PayrollService {
      * @param payroll Payroll to create
      * @return Created payroll with deductions and net salary
      */
-    public Payroll createPayroll(Payroll payroll) {
+    /*public Payroll createPayroll(Payroll payroll) {
         // Step 1: Save payroll to generate its ID
         Payroll savedPayroll = payrollRepository.save(payroll);
 
