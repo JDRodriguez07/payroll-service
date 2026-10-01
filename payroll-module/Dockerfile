@@ -40,4 +40,4 @@ EXPOSE 8080
 # Comando para ejecutar la aplicación
 # Define el comando que se ejecutará cuando el contenedor se inicie
 # Ejecuta la aplicación Java contenida en el archivo JAR
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
