@@ -1,8 +1,4 @@
-FROM mysql:8.0.22  
+FROM mysql:8.0.22
 
-ENV MYSQL_ROOT_PASSWORD REDACTED
-ENV MYSQL_DATABASE db_payroll_service
-ENV MYSQL_USER payroll_service_user
-ENV MYSQL_PASSWORD REDACTED
-
+# Database names and credentials are injected by Docker Compose from .env.
 EXPOSE 3306
