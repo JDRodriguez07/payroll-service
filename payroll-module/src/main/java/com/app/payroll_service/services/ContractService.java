@@ -13,6 +13,7 @@ import com.app.payroll_service.exceptions.ContractTypeNotFoundException;
 import com.app.payroll_service.exceptions.InvalidTerminationDateException;
 import com.app.payroll_service.exceptions.MissingTerminationDateException;
 import com.app.payroll_service.exceptions.ScheduleNotFoundException;
+import com.app.payroll_service.exceptions.TerminationDateNotAllowedException;
 import com.app.payroll_service.mapper.ContractMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,11 @@ public class ContractService {
 
         ContractType contractType = contractTypeRepository.findById(dto.getContractTypeId())
                 .orElseThrow(() -> new ContractTypeNotFoundException(dto.getContractTypeId()));
+
+        // Si el tipo de contrato es indefinido (ID = 1), no se permite terminationDate
+        if (contractType.getContractTypeId() == 1L && dto.getTerminationDate() != null) {
+            throw new TerminationDateNotAllowedException(contractType.getContractTypeId());
+        }
 
         // Validar si se requiere terminationDate
         if (contractType.isRequiresEndDate() && dto.getTerminationDate() == null) {
