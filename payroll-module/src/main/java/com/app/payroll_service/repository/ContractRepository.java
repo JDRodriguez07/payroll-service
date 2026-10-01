@@ -15,18 +15,13 @@ import com.app.payroll_service.models.Contract;
 public interface ContractRepository extends JpaRepository<Contract, Long> {
 
     /**
-     * Retrieves a list of contracts that match the given status and have a
-     * termination date
-     * either before or exactly equal to the specified dates.
+     * Retrieves all contracts with the given status whose termination date is
+     * less than or equal to the specified date.
      *
-     * @param status the contract status to match (e.g., ACTIVE, TERMINATED)
-     * @param before the date before which contracts are considered
-     * @param equals the exact termination date to include
+     * @param status the contract status to filter (e.g., ACTIVE)
+     * @param date   the comparison date (typically LocalDate.now())
      * @return list of contracts matching the criteria
      */
-    List<Contract> findByStatusAndTerminationDateBeforeOrTerminationDateEquals(
-            String status,
-            LocalDate before,
-            LocalDate equals);
-            
+    List<Contract> findByStatusAndTerminationDateLessThanEqual(String status, LocalDate date);
+
 }

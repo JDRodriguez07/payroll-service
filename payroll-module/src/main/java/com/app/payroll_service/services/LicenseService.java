@@ -126,10 +126,15 @@ public class LicenseService {
     @Scheduled(cron = "59 23 * * *")
     public void autoTerminateLicense() {
         LocalDate today = LocalDate.now();
+        DayOfWeek todayDay = today.getDayOfWeek();
 
-        List<License> licensesToTerminate = licenseRepository.findByStatusAndEndDateBeforeOrEndDateEquals(
+        if (todayDay == DayOfWeek.SATURDAY || todayDay == DayOfWeek.SUNDAY) {
+            return;
+        }
+
+        List<License> licensesToTerminate = licenseRepository.findByStatusAndEndDateLessThanEqual(
                 LicenseStatusEnum.APPROVED.getValue(),
-                today, today);
+                today);
 
         for (License license : licensesToTerminate) {
             license.setStatus(LicenseStatusEnum.TERMINATED.getValue());
@@ -178,6 +183,17 @@ public class LicenseService {
                 .orElseThrow(() -> new LicenseNotFoundException(licenseId));
 
         return licenseMapper.toResponseDTO(license);
+    }
+
+    /**
+     * Retrieves all licenses that are currently in PENDING status.
+     *
+     * @return a list of LicenseResponseDTO objects representing the pending
+     *         licenses
+     */
+    public List<LicenseResponseDTO> getAllPendingLicenses() {
+        List<License> pendingLicenses = licenseRepository.findByStatusIgnoreCase(LicenseStatusEnum.PENDING.getValue());
+        return licenseMapper.toResponseDTOList(pendingLicenses);
     }
 
 }
