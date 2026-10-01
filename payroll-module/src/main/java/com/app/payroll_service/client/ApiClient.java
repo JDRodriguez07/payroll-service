@@ -29,4 +29,14 @@ public class ApiClient {
 
         return response.getBody();
     }
+
+    public Object allEmployeesAndContracts(){
+        String url = userManagementApiProperties.getBaseUrl() + "/employee/allEmployeesAndContracts";
+
+        ResponseEntity<Object> response = httpService.get(
+                url,
+                Object.class,
+                Map.of("Authorization", authorization)
+        );
+    }
 }

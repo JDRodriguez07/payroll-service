@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.app.payroll_service.enums.PayrollStatusEnum;
 import com.app.payroll_service.enums.ContractStatusEnum;
+import com.app.payroll_service.dto.EmployeeAndContract;
 
 import com.app.payroll_service.exceptions.IsNotLastWorkDayOfMonthException;
 import com.app.payroll_service.exceptions.PayrollNotFoundException;
@@ -63,7 +64,8 @@ public class PayrollService {
     }
 
     public void generateMonthlyPayrolls() {
-
+        Array<EmployeeAndContract> employeesAndContracts = getAllEmployeesAndContracts();
+        system.out.println(employeesAndContracts);
         LocalDate today = LocalDate.now();
 
         if (!isLastBusinessDayOfMonth(today)) {
