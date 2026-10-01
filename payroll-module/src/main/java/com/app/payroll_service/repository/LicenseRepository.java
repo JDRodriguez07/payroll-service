@@ -32,4 +32,8 @@ public interface LicenseRepository extends JpaRepository<License, Long> {
      */
     List<License> findByStatusAndEndDateLessThanEqual(String status, LocalDate date);
 
+    List<License> findByStatusAndStartDate(String status, LocalDate startDate);
+
+    List<License> findByStatusAndStartDateLessThanEqual(String status, LocalDate startDate);
+
 }

@@ -10,6 +10,7 @@ public enum VacationStatusEnum {
     CANCELED("CANCELADA"),
     APPROVED("APROBADA"),
     REJECTED("RECHAZADA"),
+    ACTIVE("ACTIVA"),
     TERMINATED("TERMINADA");
 
     private final String value;
