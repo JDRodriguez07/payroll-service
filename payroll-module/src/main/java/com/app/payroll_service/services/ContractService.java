@@ -191,20 +191,22 @@ public class ContractService {
      * termination date.
      * Scheduled to run every day at 11:59 PM.
      */
-    // @Scheduled(cron = "59 23 * * *")
-    // public void autoTerminateDueContracts() {
-    //     LocalDate today = LocalDate.now();
+    //@Scheduled(fixedRate = 10000)
+    //@Scheduled(cron = "25 23 * * *")
+    public void autoTerminateDueContracts() {
+        System.out.println("Running autoTerminateDueContracts... at 11:25 p.m");
+        LocalDate today = LocalDate.now();
 
-    //     List<Contract> contractsToTerminate = contractRepository
-    //             .findByStatusAndTerminationDateLessThanEqual(
-    //                     ContractStatusEnum.ACTIVE.getValue(), today);
+        List<Contract> contractsToTerminate = contractRepository
+                .findByStatusAndTerminationDateLessThanEqual(
+                        ContractStatusEnum.ACTIVE.getValue(), today);
 
-    //     for (Contract contract : contractsToTerminate) {
-    //         contract.setStatus(ContractStatusEnum.TERMINATED.getValue());
-    //     }
+        for (Contract contract : contractsToTerminate) {
+            contract.setStatus(ContractStatusEnum.TERMINATED.getValue());
+        }
 
-    //     contractRepository.saveAll(contractsToTerminate);
-    // }
+        contractRepository.saveAll(contractsToTerminate);
+    }
 
     /**
      * Calculates the number of working hours per day based on the given schedule.
