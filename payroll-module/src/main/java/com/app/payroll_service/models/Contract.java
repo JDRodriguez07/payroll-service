@@ -32,7 +32,7 @@ public class Contract {
      * Reference to the type of contract.
      */
     @ManyToOne
-    @JoinColumn(name = "contract_type", nullable = false)
+    @JoinColumn(name = "contract_type_id", nullable = false)
     private ContractType contractType;
 
     /**

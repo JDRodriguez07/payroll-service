@@ -1,13 +1,19 @@
 package com.app.payroll_service.models;
 
 import java.math.BigDecimal;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
+
 import java.util.List;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
+
 import lombok.Data;
 
 @Entity
@@ -39,13 +45,13 @@ public class Payroll {
      * Start date of the payroll period.
      */
     @Column(name = "initial_period", nullable = false)
-    private Date initialPeriod;
+    private LocalDate initialPeriod;
 
     /**
      * End date of the payroll period.
      */
     @Column(name = "final_period", nullable = false)
-    private Date finalPeriod;
+    private LocalDate finalPeriod;
 
     /**
      * Total net salary to be paid.
