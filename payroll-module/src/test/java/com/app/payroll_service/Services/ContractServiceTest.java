@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

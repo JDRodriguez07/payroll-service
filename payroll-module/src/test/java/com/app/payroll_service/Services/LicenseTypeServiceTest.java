@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,7 +21,6 @@ import com.app.payroll_service.exceptions.LicenseTypeNotFoundException;
 import com.app.payroll_service.mapper.LicenseTypeMapper;
 import com.app.payroll_service.models.LicenseType;
 import com.app.payroll_service.repository.LicenseTypeRepository;
-import com.app.payroll_service.services.LicenseTypeService;
 
 public class LicenseTypeServiceTest {
 

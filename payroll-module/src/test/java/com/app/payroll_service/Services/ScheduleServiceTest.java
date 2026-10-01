@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,7 +22,6 @@ import com.app.payroll_service.exceptions.ScheduleNotFoundException;
 import com.app.payroll_service.mapper.ScheduleMapper;
 import com.app.payroll_service.models.Schedule;
 import com.app.payroll_service.repository.ScheduleRepository;
-import com.app.payroll_service.services.ScheduleService;
 
 @ExtendWith(MockitoExtension.class)
 public class ScheduleServiceTest {

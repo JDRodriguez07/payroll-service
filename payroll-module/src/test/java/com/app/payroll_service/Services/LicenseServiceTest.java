@@ -1,4 +1,4 @@
-package com.app.payroll_service.Services;
+package com.app.payroll_service.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,8 +39,6 @@ import com.app.payroll_service.models.LicenseType;
 import com.app.payroll_service.repository.ContractRepository;
 import com.app.payroll_service.repository.LicenseRepository;
 import com.app.payroll_service.repository.LicenseTypeRepository;
-import com.app.payroll_service.services.ContractService;
-import com.app.payroll_service.services.LicenseService;
 
 @DataJpaTest
 public class LicenseServiceTest {
