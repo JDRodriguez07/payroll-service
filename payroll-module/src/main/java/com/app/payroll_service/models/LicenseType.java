@@ -28,7 +28,7 @@ public class LicenseType {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "is_discount", nullable = false)
+    @Column(name = "is_discount", nullable = false, columnDefinition = "TINYINT(1)")
     private boolean isDiscount;
 
     @CreationTimestamp
