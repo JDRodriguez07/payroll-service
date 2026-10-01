@@ -10,14 +10,15 @@ import org.springframework.stereotype.Service;
 import com.app.payroll_service.dto.RequestVacationDTO;
 import com.app.payroll_service.dto.VacationResponseDTO;
 import com.app.payroll_service.enums.VacationStatusEnum;
-import com.app.payroll_service.exceptions.InvalidVacationDatesException;
-import com.app.payroll_service.exceptions.InvalidVacationDaysException;
-import com.app.payroll_service.exceptions.VacationNotFoundException;
-import com.app.payroll_service.exceptions.VacationStatusNotPendingApprovedException;
+import com.app.payroll_service.exceptions.*;
 import com.app.payroll_service.mapper.VacationMapper;
 import com.app.payroll_service.models.Vacation;
 import com.app.payroll_service.repository.VacationRepository;
 
+/**
+ * Service class responsible for handling vacation requests,
+ * approvals, rejections, and cancellations.
+ */
 @Service
 public class VacationService {
 
@@ -29,19 +30,36 @@ public class VacationService {
 
     public static final int VACATION_DAYS = 15;
 
+    /**
+     * Retrieves all vacation records from the database.
+     *
+     * @return a list of VacationResponseDTOs
+     */
     public List<VacationResponseDTO> getAllVacations() {
         List<Vacation> vacations = vacationRepository.findAll();
         return vacationMapper.toResponseDTOList(vacations);
     }
 
+    /**
+     * Retrieves a vacation record by its ID.
+     *
+     * @param id the vacation ID
+     * @return the corresponding VacationResponseDTO
+     */
     public VacationResponseDTO getVacationById(Long id) {
         Vacation vacation = vacationRepository.findById(id)
                 .orElseThrow(() -> new VacationNotFoundException(id));
         return vacationMapper.toResponseDTO(vacation);
     }
 
+    /**
+     * Processes a new vacation request, validating the date range
+     * and required number of business days.
+     *
+     * @param dto the request DTO
+     * @return the created vacation as a response DTO
+     */
     public VacationResponseDTO requestVacation(RequestVacationDTO dto) {
-
         if (dto.getEndDate().isBefore(dto.getStartDate())) {
             throw new InvalidVacationDatesException();
         }
@@ -53,11 +71,7 @@ public class VacationService {
         }
 
         Vacation vacation = vacationMapper.toEntity(dto);
-
-        // Note: User ID is assumed to be valid.
-        // Validation is expected to be handled by the User microservice.
-        vacation.setUserId(dto.getUserId());
-
+        vacation.setUserId(dto.getUserId()); // Assumes user ID is valid
         vacation.setTakenDays(days);
         vacation.setStatus(VacationStatusEnum.PENDING.getValue());
 
@@ -65,6 +79,12 @@ public class VacationService {
         return vacationMapper.toResponseDTO(savedVacation);
     }
 
+    /**
+     * Approves a vacation request if it is in pending status.
+     *
+     * @param vacationId the ID of the vacation request
+     * @return the approved vacation as a response DTO
+     */
     public VacationResponseDTO approveVacation(Long vacationId) {
         Vacation vacation = vacationRepository.findById(vacationId)
                 .orElseThrow(() -> new VacationNotFoundException(vacationId));
@@ -79,6 +99,12 @@ public class VacationService {
         return vacationMapper.toResponseDTO(savedVacation);
     }
 
+    /**
+     * Rejects a vacation request if it is in pending status.
+     *
+     * @param vacationId the ID of the vacation request
+     * @return the rejected vacation as a response DTO
+     */
     public VacationResponseDTO rejectVacation(Long vacationId) {
         Vacation vacation = vacationRepository.findById(vacationId)
                 .orElseThrow(() -> new VacationNotFoundException(vacationId));
@@ -93,6 +119,12 @@ public class VacationService {
         return vacationMapper.toResponseDTO(savedVacation);
     }
 
+    /**
+     * Cancels a vacation request if it is in pending or approved status.
+     *
+     * @param vacationId the ID of the vacation request
+     * @return the canceled vacation as a response DTO
+     */
     public VacationResponseDTO cancelVacation(Long vacationId) {
         Vacation vacation = vacationRepository.findById(vacationId)
                 .orElseThrow(() -> new VacationNotFoundException(vacationId));
@@ -108,6 +140,13 @@ public class VacationService {
         return vacationMapper.toResponseDTO(canceledVacation);
     }
 
+    /**
+     * Calculates the number of working days (Monday–Friday) between two dates.
+     *
+     * @param start start date
+     * @param end   end date
+     * @return number of working days
+     */
     private int calculateWorkingDays(LocalDate start, LocalDate end) {
         int workDays = 0;
         LocalDate date = start;
@@ -121,25 +160,29 @@ public class VacationService {
     }
 
     /**
-     * Calculates an end date given a start date and number of business days,
-     * excluding weekends (Saturday and Sunday).
+     * (Optional) Calculates an end date based on a start date and a number of
+     * business days,
+     * excluding weekends. This method is currently commented out.
      *
      * @param startDate    Start date of the vacation
-     * @param businessDays Number of business days to calculate
+     * @param businessDays Number of working days
      * @return Calculated end date
      */
-    /*private LocalDate calculateEndDateSkippingWeekends(LocalDate startDate, int businessDays) {
-        LocalDate result = startDate;
-        int addedDays = 0;
-
-        while (addedDays < businessDays) {
-            result = result.plusDays(1);
-            DayOfWeek day = result.getDayOfWeek();
-            if (day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY) {
-                addedDays++;
-            }
-        }
-
-        return result;
-    }*/
+    /*
+     * private LocalDate calculateEndDateSkippingWeekends(LocalDate startDate, int
+     * businessDays) {
+     * LocalDate result = startDate;
+     * int addedDays = 0;
+     * 
+     * while (addedDays < businessDays) {
+     * result = result.plusDays(1);
+     * DayOfWeek day = result.getDayOfWeek();
+     * if (day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY) {
+     * addedDays++;
+     * }
+     * }
+     * 
+     * return result;
+     * }
+     */
 }

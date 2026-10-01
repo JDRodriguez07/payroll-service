@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Service class for managing operations related to contract types.
+ */
 @Service
 public class ContractTypeService {
 
@@ -20,15 +23,27 @@ public class ContractTypeService {
     @Autowired
     private ContractTypeMapper contractTypeMapper;
 
+    /**
+     * Retrieves all contract types from the database.
+     *
+     * @return a list of ContractTypeResponseDTOs
+     */
     public List<ContractTypeResponseDTO> getAllContractTypes() {
         List<ContractType> types = contractTypeRepository.findAll();
         return contractTypeMapper.toResponseDTOList(types);
     }
 
+    /**
+     * Retrieves a specific contract type by its ID.
+     *
+     * @param id the ID of the contract type
+     * @return a ContractTypeResponseDTO
+     * @throws ContractTypeNotFoundException if the contract type is not found
+     */
     public ContractTypeResponseDTO getContractTypeById(Long id) {
         ContractType type = contractTypeRepository.findById(id)
                 .orElseThrow(() -> new ContractTypeNotFoundException(id));
         return contractTypeMapper.toResponseDTO(type);
     }
-
+    
 }
